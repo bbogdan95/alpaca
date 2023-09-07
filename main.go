@@ -1,93 +1,152 @@
 package main
 
 import (
-	"alpaca-chess/bitboard"
+	"bufio"
 	"fmt"
 	"os"
 )
 
-/*
+var SQ64 [BRD_SQ_NUM]int
+var SQ120 [64]int
+var SetMask [64]uint64
+var ClearMask [64]uint64
 
-r n b q k b n r
-p p p p p p p p
+var FilesBrd [BRD_SQ_NUM]int
+var RanksBrd [BRD_SQ_NUM]int
 
+var PceChar = ".PNBRQKpnbrqk"
+var SideChar = "wb-"
+var RankChar = "12345678"
+var FileChar = "abcdefgh"
 
+var PieceBig = [13]int{FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE}
+var PieceMaj = [13]int{FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE}
+var PieceMin = [13]int{FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE}
+var PieceVal = [13]int{0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000}
+var PieceCol = [13]int{BOTH, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK}
 
-P P P P P P P P
-R N B Q K B N R
+var PiecePawn = [13]int{FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE}
+var PieceKnight = [13]int{FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE}
+var PieceKing = [13]int{FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}
+var PieceRookQueen = [13]int{FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE}
+var PieceBishopQueen = [13]int{FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE}
+var PieceSlides = [13]int{FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE}
 
- take this representation anbd transform it into 12 bitboards
- have a custom type for [12]Bitboard
- this type would have a String method that would combine all bitboards and
- print the board in this human readable format
+// used for movegen
+var LoopSlidePieces = [8]int{WB, WR, WQ, 0, BB, BR, BQ, 0}
+var LoopSlideIndex = [2]int{0, 4}
+var LoopNonSlidePieces = [6]int{WN, WK, 0, BN, BK, 0}
+var LoopNonSlideIndex = [2]int{0, 3}
+var PieceDir = [13][8]int{
+	{0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0},
+	{-8, -19, -21, -12, 8, 19, 21, 12},
+	{-9, -11, 11, 9, 0, 0, 0, 0},
+	{-1, -10, 1, 10, 0, 0, 0, 0},
+	{-1, -10, 1, 10, -9, -11, 11, 9},
+	{-1, -10, 1, 10, -9, -11, 11, 9},
+	{0, 0, 0, 0, 0, 0, 0, 0},
+	{-8, -19, -21, -12, 8, 19, 21, 12},
+	{-9, -11, 11, 9, 0, 0, 0, 0},
+	{-1, -10, 1, 10, 0, 0, 0, 0},
+	{-1, -10, 1, 10, -9, -11, 11, 9},
+	{-1, -10, 1, 10, -9, -11, 11, 9},
+}
+var NumDir = [13]int{0, 0, 8, 4, 4, 8, 8, 0, 8, 4, 4, 8, 8}
 
- arrayToBitboards
-*/
+// Every time we move a piece, we will do castle_permissions &= CastlePerm[from]
+// and castle_permissions &= CastlePerm[from]. The result of these operations is 1111 == 15
+// except for A1, E1, H1 & A8, E8, H8
+// When the rooks of the queen moves on either side, it takes out the castle permissions for that side
+// eq. Black queen moves from E8 to E7. castle_permissions &= 3 -> gives 0011 -> which means BLACK side lost castling permissions
+// on both queen and king side.
+var CastlePerm = [120]int{
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 13, 15, 15, 15, 12, 15, 15, 14, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 7, 15, 15, 15, 3, 15, 15, 11, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+}
+
+var FEN0 = "8/3q4/8/8/4Q3/8/8/8 w - - 0 2"
+var FEN1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+var FEN2 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+var FEN3 = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+var FEN4 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+
+var PAWNMOVES_W = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+var PAWNMOVES_B = "rnbqkbnr/p1p1p3/3p3p/1p1p4/2P1Pp2/8/PP1P1PpP/RNBQKB1R b KQkq e3 0 1"
+var KNIGHTSKINGSFEN = "5k2/1n6/4n3/6N1/8/3N4/8/5K2 w - - 0 1"
+var ROOKSFEN = "6k1/8/5r2/8/1nR5/5N2/8/6K1 b - - 0 1"
+var QUEENSFEN = "6k1/8/4nq2/8/1nQ5/5N2/1N6/6K1 b - - 0 1"
+var BISHOPSFEN = "6k1/1b6/4n3/8/1n4B1/1B3N2/1N6/2b3K1 b - - 0 1"
+var CASTLE1FEN = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"
+var CASTLE2FEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+var PERFTFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+
+var START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 func main() {
-	input := [8][8]string{
-		{"r", "n", "b", "q", "k", "b", "n", "r"},
-		{"p", "p", "p", "p", "p", "p", "p", "p"},
-		{" ", " ", " ", " ", " ", " ", " ", " "},
-		{" ", " ", " ", " ", " ", " ", " ", " "},
-		{" ", " ", " ", " ", " ", " ", " ", " "},
-		{" ", " ", " ", " ", " ", " ", " ", " "},
-		{"P", "P", "P", "P", "P", "P", "P", "P"},
-		{"R", "N", "B", "Q", "K", "B", "N", "R"},
+	InitAll()
+
+	reader := bufio.NewReader(os.Stdin)
+
+	board := &Board{
+		MoveList: &MoveList{},
 	}
 
-	bb := bitboard.NewChessBoard(input)
+	board.ParseFen(START_FEN)
+	board.GenerateAllMoves()
 
-	possibleWhiteMoves("a", bb)
+	board.PrintBoard(os.Stdout)
+
+	_, _ = reader.ReadString('\n')
+
+	// repalce with range
+	for moveIndex := 0; moveIndex < board.MoveList.Count; moveIndex++ {
+		move := board.MoveList.Moves[moveIndex].Move
+
+		if board.MakeMove(move) == FALSE {
+			continue
+		}
+
+		fmt.Printf("\nMADE: %s\n", PrintMove(move))
+		board.PrintBoard(os.Stdout)
+
+		board.TakeMove()
+		fmt.Printf("\nTAKE: %s\n", PrintMove(move))
+		board.PrintBoard(os.Stdout)
+
+		_, _ = reader.ReadString('\n')
+	}
 
 }
 
-const (
-	FILE_A          = 72340172838076673
-	FILE_H          = 9259542123273814144
-	FILE_AB         = 217020518514230019
-	FILE_GH         = 13889313184910721216
-	RANK_1          = 18374686479671623680
-	RANK_4          = 1095216660480
-	RANK_5          = 4278190080
-	RANK_8          = 255
-	CENTER          = 103481868288
-	EXTENDED_CENTER = 66229406269440
-	KING_SIDE       = 1085102592571150096
-	QUEEN_SIDE      = 1085102592571150095
-	KING_B7         = 460039
-	KNIGHT_C6       = 43234889994
-)
+func InitAll() {
+	InitSq120To64()
+	InitBitMasks()
+	InitHashKeys()
+	InitFilesRanksBrd()
+}
 
-var (
-	NOT_WHITE_PIECES = bitboard.Bitboard(0)
-	BLACK_PIECES     = bitboard.Bitboard(0)
-	EMPTY            = bitboard.Bitboard(0)
-)
+func InitBitMasks() {
+	for index := 0; index < 64; index++ {
+		SetMask[index] = 1 << index
+		ClearMask[index] = ^SetMask[index]
+	}
+}
 
-func possibleWhiteMoves(history string, cb *bitboard.ChessBoard) {
-	NOT_WHITE_PIECES = cb.WP | cb.WN | cb.WB | cb.WR | cb.WQ | cb.WK | cb.BK
-	BLACK_PIECES = cb.BP | cb.BN | cb.BB | cb.BR | cb.BQ
-	EMPTY = ^(cb.WP | cb.WN | cb.WN | cb.WR | cb.WQ | cb.WB | cb.WK | cb.BP | cb.BN | cb.BN | cb.BR | cb.BQ | cb.BB | cb.BK)
+func ClearBit(bb *uint64, sq int) {
+	*bb &= ClearMask[sq]
+}
 
-	fmt.Println("not white pieces")
-	NOT_WHITE_PIECES.String(os.Stdout)
-
-	fmt.Println("black pieces")
-	BLACK_PIECES.String(os.Stdout)
-
-	fmt.Println("empty")
-	EMPTY.String(os.Stdout)
-
-	fmt.Println("white pawns")
-	cb.WP.String(os.Stdout)
-
-	WPAttackLeft := (cb.WP >> 7)
-	fmt.Println("white pawns attack left")
-	WPAttackLeft.String(os.Stdout)
-
-	WPAttackRight := ((cb.WP >> 7) | cb.WP) & ^cb.WP
-	fmt.Println("white pawns attack right")
-	WPAttackRight.String(os.Stdout)
-
+func SetBit(bb *uint64, sq int) {
+	*bb |= SetMask[sq]
 }
