@@ -7,19 +7,19 @@ func FR2SQ(f, r int) int {
 }
 
 // Move flag En Passant
-var MFLAGEP = 0x40000
+var MoveFlagEnPassant = 0x40000
 
 // Move flag Pawn Start
-var MFLAGPS = 0x80000
+var MoveFlagPawnStart = 0x80000
 
 // Move flag Castle
-var MFLAGCA = 0x100000
+var MoveFlagCastle = 0x1000000
 
 // Move flag Capture
-var MFLAGCAP = 0x7c0000
+var MoveFlagCapture = 0x7C000
 
 // Move flag Promoted
-var MFLAGPROM = 0xF0000
+var MoveFlagPromotion = 0xF00000
 
 func GetFrom(move int) int {
 	return move & 0x7F

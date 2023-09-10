@@ -1,8 +1,6 @@
 package main
 
 func (b *Board) ParseFen(fen string) {
-	b.ResetBoard()
-
 	rank := RANK_8
 	file := FILE_A
 	piece := 0
@@ -11,12 +9,14 @@ func (b *Board) ParseFen(fen string) {
 	sq120 := 0
 	fenPos := 0
 
+	b.ResetBoard()
+
 	for i, p := range fen {
-		fenPos = i
-		count = 1
 		if rank < RANK_1 {
 			break
 		}
+		fenPos = i
+		count = 1
 		switch p {
 		case 'p':
 			piece = BP
@@ -48,6 +48,7 @@ func (b *Board) ParseFen(fen string) {
 		case '/', ' ':
 			rank--
 			file = FILE_A
+			fenPos++
 			continue
 		default:
 			panic("FEN error")

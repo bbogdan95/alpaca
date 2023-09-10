@@ -1,11 +1,5 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-)
-
 var SQ64 [BRD_SQ_NUM]int
 var SQ120 [64]int
 var SetMask [64]uint64
@@ -87,7 +81,7 @@ var KNIGHTSKINGSFEN = "5k2/1n6/4n3/6N1/8/3N4/8/5K2 w - - 0 1"
 var ROOKSFEN = "6k1/8/5r2/8/1nR5/5N2/8/6K1 b - - 0 1"
 var QUEENSFEN = "6k1/8/4nq2/8/1nQ5/5N2/1N6/6K1 b - - 0 1"
 var BISHOPSFEN = "6k1/1b6/4n3/8/1n4B1/1B3N2/1N6/2b3K1 b - - 0 1"
-var CASTLE1FEN = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"
+var CASTLE1FEN = "r3k1r1/8/8/8/8/8/8/R3K2R w KQq - 0 1"
 var CASTLE2FEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 var PERFTFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 
@@ -96,36 +90,13 @@ var START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 func main() {
 	InitAll()
 
-	reader := bufio.NewReader(os.Stdin)
+	board := &Board{}
 
-	board := &Board{
-		MoveList: &MoveList{},
-	}
+	board.ParseFen(PERFTFEN)
 
-	board.ParseFen(START_FEN)
-	board.GenerateAllMoves()
+	board.CheckBoard()
 
-	board.PrintBoard(os.Stdout)
-
-	_, _ = reader.ReadString('\n')
-
-	// repalce with range
-	for moveIndex := 0; moveIndex < board.MoveList.Count; moveIndex++ {
-		move := board.MoveList.Moves[moveIndex].Move
-
-		if board.MakeMove(move) == FALSE {
-			continue
-		}
-
-		fmt.Printf("\nMADE: %s\n", PrintMove(move))
-		board.PrintBoard(os.Stdout)
-
-		board.TakeMove()
-		fmt.Printf("\nTAKE: %s\n", PrintMove(move))
-		board.PrintBoard(os.Stdout)
-
-		_, _ = reader.ReadString('\n')
-	}
+	PerftTest(5, board)
 
 }
 

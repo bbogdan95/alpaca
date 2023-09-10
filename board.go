@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"log"
+	"os"
 )
 
 type Undo struct {
@@ -14,7 +17,6 @@ type Undo struct {
 }
 
 type Board struct {
-	MoveList  *MoveList
 	Pieces    [BRD_SQ_NUM]int
 	Pawns     [3]uint64
 	KingSq    [2]int
@@ -110,70 +112,72 @@ func InitSq120To64() {
 	}
 }
 
-// func (b *Board) CheckBoard() {
-// 	tempPceNum := [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-// 	tempBigPce := [2]int{0, 0}
-// 	tempMajPce := [2]int{0, 0}
-// 	tempMinPce := [2]int{0, 0}
-// 	tempMaterial := [2]int{0, 0}
+func (b *Board) CheckBoard() {
+	tempPceNum := [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	tempBigPce := [2]int{0, 0}
+	tempMajPce := [2]int{0, 0}
+	tempMinPce := [2]int{0, 0}
+	tempMaterial := [2]int{0, 0}
 
-// 	tempPawns := [3]uint64{0, 0, 0}
+	tempPawns := [3]uint64{0, 0, 0}
 
-// 	tempPawns[WHITE] = b.Pawns[WHITE]
-// 	tempPawns[BLACK] = b.Pawns[BLACK]
-// 	tempPawns[BOTH] = b.Pawns[BOTH]
+	tempPawns[WHITE] = b.Pawns[WHITE]
+	tempPawns[BLACK] = b.Pawns[BLACK]
+	tempPawns[BOTH] = b.Pawns[BOTH]
 
-// 	for tempPiece := WP; tempPiece <= BK; tempPiece++ {
-// 		for i := 0; i < b.PCENum[tempPiece]; i++ {
-// 			sq120 := b.PList[tempPiece][i]
-// 			if b.Pieces[sq120] != tempPiece {
-// 				log.Fatalf("Pieces not aligned (1)")
-// 			}
+	for tempPiece := WP; tempPiece <= BK; tempPiece++ {
+		for i := 0; i < b.PCENum[tempPiece]; i++ {
+			sq120 := b.PList[tempPiece][i]
+			if b.Pieces[sq120] != tempPiece {
+				panic("Pieces not aligned (1)")
+			}
 
-// 		}
-// 	}
+		}
+	}
 
-// 	for sq64 := 0; sq64 < 64; sq64++ {
-// 		sq120 := SQ120[sq64]
-// 		tempPiece := b.Pieces[sq120]
-// 		tempPceNum[tempPiece]++
-// 		color := PieceCol[tempPiece]
+	for sq64 := 0; sq64 < 64; sq64++ {
+		sq120 := SQ120[sq64]
+		tempPiece := b.Pieces[sq120]
+		tempPceNum[tempPiece]++
+		color := PieceCol[tempPiece]
 
-// 		if PieceBig[tempPiece] == TRUE {
-// 			tempBigPce[color]++
-// 		}
-// 		if PieceMaj[tempPiece] == TRUE {
-// 			tempMajPce[color]++
-// 		}
-// 		if PieceMin[tempPiece] == TRUE {
-// 			tempMinPce[color]++
-// 		}
+		if PieceBig[tempPiece] == TRUE {
+			tempBigPce[color]++
+		}
+		if PieceMaj[tempPiece] == TRUE {
+			tempMajPce[color]++
+		}
+		if PieceMin[tempPiece] == TRUE {
+			tempMinPce[color]++
+		}
 
-// 		tempMaterial[color] += PieceVal[tempPiece]
-// 	}
+		if tempPiece != EMPTY {
+			tempMaterial[color] += PieceVal[tempPiece]
+		}
+	}
 
-// 	for tempPiece := WP; tempPiece <= BK; tempPiece++ {
-// 		if tempPceNum[tempPiece] != b.PCENum[tempPiece] {
-// 			log.Fatalf("Pieces not aligned (2)")
-// 		}
-// 	}
+	for tempPiece := WP; tempPiece <= BK; tempPiece++ {
+		if tempPceNum[tempPiece] != b.PCENum[tempPiece] {
+			panic("Pieces not aligned (2)")
+		}
+	}
 
-// 	pcount := CountBits(tempPawns[WHITE])
-// 	if pcount != b.PCENum[WP] {
-// 		log.Fatalf("Pieces not aligned (3)")
-// 	}
+	pcount := CountBits(tempPawns[WHITE])
+	if pcount != b.PCENum[WP] {
+		log.Fatalf("Pieces not aligned (3)")
+	}
 
-// 	pcount = CountBits(tempPawns[BLACK])
-// 	if pcount != b.PCENum[BP] {
-// 		log.Fatalf("Pieces not aligned (4)")
-// 	}
+	pcount = CountBits(tempPawns[BLACK])
+	if pcount != b.PCENum[BP] {
+		log.Fatalf("Pieces not aligned (4)")
+	}
 
-// 	pcount = CountBits(tempPawns[BOTH])
-// 	if pcount != b.PCENum[WP]+b.PCENum[BP] {
-// 		log.Fatalf("Pieces not aligned (5)")
-// 	}
+	pcount = CountBits(tempPawns[BOTH])
+	if pcount != b.PCENum[WP]+b.PCENum[BP] {
+		log.Fatalf("Pieces not aligned (5)")
+	}
 
-// }
+}
 
 func (b *Board) ResetBoard() {
 	for i := 0; i < BRD_SQ_NUM; i++ {
@@ -233,6 +237,8 @@ func (b *Board) ClearPiece(sq int) {
 	if SqOffBoard(sq) {
 		panic("sq offboard")
 	}
+
+	b.CheckBoard()
 
 	piece := b.Pieces[sq]
 	col := PieceCol[piece]
@@ -335,8 +341,8 @@ func (b *Board) MovePiece(from, to int) {
 	if PieceBig[piece] == 0 {
 		ClearBit(&b.Pawns[col], SQ64[from])
 		ClearBit(&b.Pawns[BOTH], SQ64[from])
-		ClearBit(&b.Pawns[col], SQ64[to])
-		ClearBit(&b.Pawns[BOTH], SQ64[to])
+		SetBit(&b.Pawns[col], SQ64[to])
+		SetBit(&b.Pawns[BOTH], SQ64[to])
 	}
 
 	for i := 0; i < b.PCENum[piece]; i++ {
@@ -348,24 +354,27 @@ func (b *Board) MovePiece(from, to int) {
 
 }
 
-func (b *Board) MakeMove(move int) int {
+func (b *Board) MakeMove(move int) (int, error) {
+	b.CheckBoard()
+
 	from := GetFrom(move)
 	to := GetToSq(move)
 	side := b.Side
 
 	if SqOffBoard(from) || SqOffBoard(to) || !SideValid(side) || !PieceValid(b.Pieces[from]) {
-		panic("cannot make move")
+
+		return 0, errors.New("cannot make move")
 	}
 
 	b.History[b.HisPly].PosKey = b.PosKey
 
-	if move&MFLAGEP != 0 {
+	if move&MoveFlagEnPassant != 0 {
 		if side == WHITE {
 			b.ClearPiece(to - 10)
 		} else {
 			b.ClearPiece(to + 10)
 		}
-	} else if move&MFLAGCA != 0 {
+	} else if move&MoveFlagCastle != 0 {
 		switch to {
 		case C1:
 			b.MovePiece(A1, D1)
@@ -376,7 +385,7 @@ func (b *Board) MakeMove(move int) int {
 		case G8:
 			b.MovePiece(H8, F8)
 		default:
-			panic("illegal castle move")
+			return 0, errors.New("illegal castle move")
 		}
 	}
 
@@ -401,7 +410,8 @@ func (b *Board) MakeMove(move int) int {
 
 	if captured != EMPTY {
 		if !PieceValid(captured) {
-			panic("captured piece invalid")
+
+			return 0, errors.New("captured piece invalid")
 		}
 
 		b.ClearPiece(to)
@@ -411,18 +421,18 @@ func (b *Board) MakeMove(move int) int {
 	b.HisPly++
 	b.Ply++
 
-	if PiecePawn[b.Pieces[from]] == TRUE {
+	if PiecePawn[b.Pieces[from]] != 0 {
 		b.FiftyMove = 0
-		if move&MFLAGPS != 0 {
+		if move&MoveFlagPawnStart != 0 {
 			if side == WHITE {
 				b.EnPassant = from + 10
 				if RanksBrd[b.EnPassant] != RANK_3 {
-					panic("illegal pawn start move")
+					return 0, errors.New("illegal pawn start move")
 				}
 			} else {
 				b.EnPassant = from - 10
 				if RanksBrd[b.EnPassant] != RANK_6 {
-					panic("illegal pawn start move")
+					return 0, errors.New("illegal pawn start move")
 				}
 			}
 			b.HashEP()
@@ -433,30 +443,38 @@ func (b *Board) MakeMove(move int) int {
 
 	isPromotedPiece := GetPromoted(move)
 	if isPromotedPiece != EMPTY {
-		if !PieceValid(isPromotedPiece) || PiecePawn[isPromotedPiece] == FALSE {
-			panic("illegal piece promotion")
+		if !PieceValid(isPromotedPiece) || PiecePawn[isPromotedPiece] == TRUE {
+			b.PrintBoard(os.Stdout)
+			fmt.Println(isPromotedPiece, PieceValid(isPromotedPiece), PiecePawn[isPromotedPiece])
+			fmt.Println(PrintMove(move))
+			return 0, errors.New("illegal piece promotion")
 		}
 
 		b.ClearPiece(to)
 		b.AddPiece(to, isPromotedPiece)
 	}
 
-	if PieceKing[b.Pieces[to]] == TRUE {
+	if PieceKing[b.Pieces[to]] != 0 {
 		b.KingSq[b.Side] = to
 	}
 
 	b.Side ^= 1
 	b.HashSide()
 
+	b.CheckBoard()
+
 	if SqAttacked(b.KingSq[side], b.Side, b) == TRUE {
 		b.TakeMove()
-		return FALSE
+		return FALSE, nil
 	}
 
-	return TRUE
+	return TRUE, nil
 }
 
 func (b *Board) TakeMove() {
+
+	b.CheckBoard()
+
 	b.HisPly--
 	b.Ply--
 
@@ -485,13 +503,13 @@ func (b *Board) TakeMove() {
 	b.Side ^= 1
 	b.HashSide()
 
-	if MFLAGEP&move != 0 {
+	if MoveFlagEnPassant&move != 0 {
 		if b.Side == WHITE {
 			b.AddPiece(to-10, BP)
 		} else {
 			b.AddPiece(to+10, WP)
 		}
-	} else if MFLAGCA&move != 0 {
+	} else if MoveFlagCastle&move != 0 {
 		switch to {
 		case C1:
 			b.MovePiece(D1, A1)
@@ -523,7 +541,7 @@ func (b *Board) TakeMove() {
 
 	promoted := GetPromoted(move)
 	if promoted != EMPTY {
-		if !PieceValid(promoted) || PiecePawn[promoted] == FALSE {
+		if !PieceValid(promoted) || PiecePawn[promoted] == TRUE {
 			panic("illegal promoted piece in take move")
 		}
 
@@ -534,4 +552,6 @@ func (b *Board) TakeMove() {
 		}
 		b.AddPiece(from, piece)
 	}
+
+	b.CheckBoard()
 }

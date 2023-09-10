@@ -1,0 +1,68 @@
+Game board: 
+
+8   r   .   .   .   k   .   .   r
+7   p   .   p   p   q   p   b   .
+6   b   n   .   .   p   n   p   .
+5   .   .   .   P   N   .   .   .
+4   .   p   .   .   P   .   .   .
+3   .   .   N   .   .   Q   .   p
+2   P   P   P   B   B   P   P   P
+1   R   .   .   .   K   .   .   R
+
+    a   b   c   d   e   f   g   h
+side: w
+EnPassant:99
+castle: KQkq
+posKey: 3BC5AADBDDE86F22
+
+Starting Test To Depth:5
+move 1 : a2a3 : 4627439
+move 2 : a2a4 : 4387586
+move 3 : b2b3 : 3768824
+move 4 : g2g3 : 3472039
+move 5 : g2g4 : 3338154
+move 6 : g2h3 : 3819456
+move 7 : d5d6 : 3835265
+move 8 : d5e6 : 4727437
+move 9 : e1g1 : 4119629
+move 10 : e1c1 : 3551583
+move 11 : d2c1 : 3793390
+move 12 : d2e3 : 4407041
+move 13 : d2f4 : 3941257
+move 14 : d2g5 : 4370915
+move 15 : d2h6 : 3967365
+move 16 : e2f1 : 4095479
+move 17 : e2d1 : 3074219
+move 18 : e2d3 : 4066966
+move 19 : e2c4 : 4182989
+move 20 : e2b5 : 4032348
+move 21 : e2a6 : 3553501
+move 22 : a1b1 : 3827454
+move 23 : a1c1 : 3814203
+move 24 : a1d1 : 3568344
+move 25 : h1g1 : 3989454
+move 26 : h1f1 : 3685756
+move 27 : f3e3 : 4477772
+move 28 : f3d3 : 3949570
+move 29 : f3g3 : 4669768
+move 30 : f3h3 : 5067173
+move 31 : f3f4 : 4327936
+move 32 : f3f5 : 5271134
+move 33 : f3f6 : 3975992
+move 34 : f3g4 : 4514010
+move 35 : f3h5 : 4743335
+move 36 : c3d1 : 3995761
+move 37 : c3b1 : 3996171
+move 38 : c3a4 : 4628497
+move 39 : c3b5 : 4317482
+move 40 : e5g4 : 3415992
+move 41 : e5d3 : 3288812
+move 42 : e5c4 : 3494887
+move 43 : e5c6 : 4083458
+move 44 : e5d7 : 4404043
+move 45 : e5f7 : 4164923
+move 46 : e5g6 : 3949417
+move 47 : e1d1 : 3559113
+move 48 : e1f1 : 3377351
+
+Test Complete : 193690690 nodes visited

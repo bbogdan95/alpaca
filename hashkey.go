@@ -21,9 +21,10 @@ func InitHashKeys() {
 
 func GeneratePosKey(b *Board) uint64 {
 	var finalKey uint64 = 0
+	piece := EMPTY
 
 	for sq := 0; sq < BRD_SQ_NUM; sq++ {
-		piece := b.Pieces[sq]
+		piece = b.Pieces[sq]
 		if piece != NO_SQ && piece != EMPTY && piece != OFFBOARD {
 			//if piece >= WP && piece <= BK {
 			finalKey ^= PieceKeys[piece][sq]
@@ -41,9 +42,9 @@ func GeneratePosKey(b *Board) uint64 {
 		//}
 	}
 
-	if b.CastlePerm >= 0 && b.CastlePerm <= 15 {
-		finalKey ^= CastleKeys[b.CastlePerm]
-	}
+	//if b.CastlePerm >= 0 && b.CastlePerm <= 15 {
+	finalKey ^= CastleKeys[b.CastlePerm]
+	//}
 
 	return finalKey
 }

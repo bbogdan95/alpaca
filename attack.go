@@ -15,21 +15,7 @@ func SqAttacked(sq int, side int, b *Board) int {
 		panic("err")
 	}
 
-	// knights
-	for i := 0; i < 8; i++ {
-		piece := b.Pieces[sq+KnightDir[i]]
-		if piece != OFFBOARD && piece != EMPTY && PieceKnight[piece] == TRUE && PieceCol[piece] == side {
-			return TRUE
-		}
-	}
-
-	// kings
-	for i := 0; i < 8; i++ {
-		piece := b.Pieces[sq+KingDir[i]]
-		if piece != OFFBOARD && piece != EMPTY && PieceKing[piece] == TRUE && PieceCol[piece] == side {
-			return TRUE
-		}
-	}
+	b.CheckBoard()
 
 	// pawns
 	if side == WHITE {
@@ -42,7 +28,15 @@ func SqAttacked(sq int, side int, b *Board) int {
 		}
 	}
 
-	// roocks, queens
+	// knights
+	for i := 0; i < 8; i++ {
+		piece := b.Pieces[sq+KnightDir[i]]
+		if piece != OFFBOARD && piece != EMPTY && PieceKnight[piece] == TRUE && PieceCol[piece] == side {
+			return TRUE
+		}
+	}
+
+	// rooks, queens
 	for i := 0; i < 4; i++ {
 		dir := RookDir[i]
 		tSq := sq + dir
@@ -75,6 +69,14 @@ func SqAttacked(sq int, side int, b *Board) int {
 			}
 			tSq += dir
 			piece = b.Pieces[tSq]
+		}
+	}
+
+	// kings
+	for i := 0; i < 8; i++ {
+		piece := b.Pieces[sq+KingDir[i]]
+		if piece != OFFBOARD && piece != EMPTY && PieceKing[piece] == TRUE && PieceCol[piece] == side {
+			return TRUE
 		}
 	}
 
