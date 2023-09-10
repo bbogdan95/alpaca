@@ -1,4 +1,4 @@
-package main
+package engine
 
 func (b *Board) ParseFen(fen string) {
 	rank := RANK_8

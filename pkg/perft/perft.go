@@ -1,13 +1,14 @@
-package main
+package perft
 
 import (
+	"alpaca-chess/pkg/engine"
 	"fmt"
 	"os"
 )
 
 var leafNodes uint64
 
-func Perft(depth int, b *Board) {
+func Perft(depth int, b *engine.Board) {
 	b.CheckBoard()
 
 	if depth == 0 {
@@ -15,8 +16,8 @@ func Perft(depth int, b *Board) {
 		return
 	}
 
-	ml := &MoveList{}
-	GenerateAllMoves(b, ml)
+	ml := &engine.MoveList{}
+	engine.GenerateAllMoves(b, ml)
 
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(ml.Moves[i].Move)
@@ -24,7 +25,7 @@ func Perft(depth int, b *Board) {
 			panic(err)
 		}
 
-		if res == FALSE {
+		if res == 0 {
 			continue
 		}
 
@@ -33,15 +34,15 @@ func Perft(depth int, b *Board) {
 	}
 }
 
-func PerftTest(depth int, b *Board) {
+func PerftTest(depth int, b *engine.Board) {
 	b.CheckBoard()
 
 	b.PrintBoard(os.Stdout)
 	fmt.Fprintf(os.Stdout, "\nStarting Test To Depth:%d\n", depth)
 
 	leafNodes = 0
-	ml := &MoveList{}
-	GenerateAllMoves(b, ml)
+	ml := &engine.MoveList{}
+	engine.GenerateAllMoves(b, ml)
 
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(ml.Moves[i].Move)
@@ -49,7 +50,7 @@ func PerftTest(depth int, b *Board) {
 			panic(err)
 		}
 
-		if res == FALSE {
+		if res == 0 {
 			continue
 		}
 
@@ -58,7 +59,7 @@ func PerftTest(depth int, b *Board) {
 		b.TakeMove()
 		oldnodes := leafNodes - cumnodes
 
-		fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, PrintMove(ml.Moves[i].Move), oldnodes)
+		fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, engine.PrintMove(ml.Moves[i].Move), oldnodes)
 	}
 
 	fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited\n", leafNodes)

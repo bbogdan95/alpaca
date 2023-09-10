@@ -1,4 +1,4 @@
-package main
+package engine
 
 var SQ64 [BRD_SQ_NUM]int
 var SQ120 [64]int
@@ -87,37 +87,9 @@ var PERFTFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -
 
 var START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-func main() {
-	InitAll()
-
-	board := &Board{}
-
-	board.ParseFen(PERFTFEN)
-
-	board.CheckBoard()
-
-	PerftTest(5, board)
-
-}
-
 func InitAll() {
 	InitSq120To64()
 	InitBitMasks()
 	InitHashKeys()
 	InitFilesRanksBrd()
-}
-
-func InitBitMasks() {
-	for index := 0; index < 64; index++ {
-		SetMask[index] = 1 << index
-		ClearMask[index] = ^SetMask[index]
-	}
-}
-
-func ClearBit(bb *uint64, sq int) {
-	*bb &= ClearMask[sq]
-}
-
-func SetBit(bb *uint64, sq int) {
-	*bb |= SetMask[sq]
 }

@@ -1,4 +1,4 @@
-package main
+package engine
 
 import (
 	"fmt"
@@ -42,4 +42,19 @@ func CountBits(b uint64) int {
 		b >>= 1
 	}
 	return count
+}
+
+func InitBitMasks() {
+	for index := 0; index < 64; index++ {
+		SetMask[index] = 1 << index
+		ClearMask[index] = ^SetMask[index]
+	}
+}
+
+func ClearBit(bb *uint64, sq int) {
+	*bb &= ClearMask[sq]
+}
+
+func SetBit(bb *uint64, sq int) {
+	*bb |= SetMask[sq]
 }
