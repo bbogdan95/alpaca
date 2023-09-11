@@ -12,6 +12,5 @@ func main() {
 	board.ParseFen(engine.PERFTFEN)
 	board.CheckBoard()
 
-	perft.PerftTest(4, board)
-
+	perft.PerftTest(3, board, true)
 }

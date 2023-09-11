@@ -8,12 +8,12 @@ import (
 
 var leafNodes uint64
 
-func Perft(depth int, b *engine.Board) {
+func Perft(depth int, b *engine.Board) error {
 	b.CheckBoard()
 
 	if depth == 0 {
 		leafNodes++
-		return
+		return nil
 	}
 
 	ml := &engine.MoveList{}
@@ -22,23 +22,30 @@ func Perft(depth int, b *engine.Board) {
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(ml.Moves[i].Move)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if res == 0 {
 			continue
 		}
 
-		Perft(depth-1, b)
+		err = Perft(depth-1, b)
+		if err != nil {
+			return err
+		}
 		b.TakeMove()
 	}
+
+	return nil
 }
 
-func PerftTest(depth int, b *engine.Board) {
+func PerftTest(depth int, b *engine.Board, log bool) (uint64, error) {
 	b.CheckBoard()
 
-	b.PrintBoard(os.Stdout)
-	fmt.Fprintf(os.Stdout, "\nStarting Test To Depth:%d\n", depth)
+	if log {
+		b.PrintBoard(os.Stdout)
+		fmt.Fprintf(os.Stdout, "\nStarting Test To Depth:%d\n", depth)
+	}
 
 	leafNodes = 0
 	ml := &engine.MoveList{}
@@ -47,7 +54,7 @@ func PerftTest(depth int, b *engine.Board) {
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(ml.Moves[i].Move)
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 
 		if res == 0 {
@@ -55,12 +62,22 @@ func PerftTest(depth int, b *engine.Board) {
 		}
 
 		cumnodes := leafNodes
-		Perft(depth-1, b)
+		err = Perft(depth-1, b)
+		if err != nil {
+			return 0, err
+		}
+
 		b.TakeMove()
 		oldnodes := leafNodes - cumnodes
 
-		fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, engine.PrintMove(ml.Moves[i].Move), oldnodes)
+		if log {
+			fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, engine.PrintMove(ml.Moves[i].Move), oldnodes)
+		}
 	}
 
-	fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited\n", leafNodes)
+	if log {
+		fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited\n", leafNodes)
+	}
+
+	return leafNodes, nil
 }

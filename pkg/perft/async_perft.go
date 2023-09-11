@@ -1,11 +1,5 @@
 package perft
 
-// import (
-// 	"fmt"
-// 	"os"
-// 	"sync"
-// )
-
 // type tree struct {
 // 	LeafNodes uint64
 // 	Mu        sync.Mutex
@@ -14,7 +8,7 @@ package perft
 // // var leafNodes uint64
 // var leafNodes tree
 
-// func Perft(depth int, b *Board, wg *sync.WaitGroup) {
+// func Perft(depth int, b *engine.Board, wg *sync.WaitGroup) {
 // 	b.CheckBoard()
 // 	wg.Add(1)
 // 	defer wg.Done()
@@ -27,8 +21,8 @@ package perft
 // 		return
 // 	}
 
-// 	ml := &MoveList{}
-// 	GenerateAllMoves(b, ml)
+// 	ml := &engine.MoveList{}
+// 	engine.GenerateAllMoves(b, ml)
 
 // 	for i := 0; i < ml.Count; i++ {
 // 		res, err := b.MakeMove(ml.Moves[i].Move)
@@ -36,7 +30,7 @@ package perft
 // 			panic(err)
 // 		}
 
-// 		if res == FALSE {
+// 		if res == 0 {
 // 			continue
 // 		}
 
@@ -45,15 +39,15 @@ package perft
 // 	}
 // }
 
-// func PerftTest(depth int, b *Board) {
+// func PerftTest(depth int, b *engine.Board) {
 // 	b.CheckBoard()
 
 // 	b.PrintBoard(os.Stdout)
 // 	fmt.Fprintf(os.Stdout, "\nStarting Test To Depth:%d\n", depth)
 
 // 	leafNodes.LeafNodes = 0
-// 	ml := &MoveList{}
-// 	GenerateAllMoves(b, ml)
+// 	ml := &engine.MoveList{}
+// 	engine.GenerateAllMoves(b, ml)
 
 // 	var wg sync.WaitGroup
 
@@ -63,7 +57,7 @@ package perft
 // 			panic(err)
 // 		}
 
-// 		if res == FALSE {
+// 		if res == 0 {
 // 			continue
 // 		}
 
@@ -77,7 +71,7 @@ package perft
 // 		oldnodes := leafNodes.LeafNodes - cumnodes
 // 		leafNodes.Mu.Unlock()
 
-// 		fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, PrintMove(ml.Moves[i].Move), oldnodes)
+// 		fmt.Fprintf(os.Stdout, "move %d : %s : %1d\n", i+1, engine.PrintMove(ml.Moves[i].Move), oldnodes)
 // 	}
 
 // 	wg.Wait()
@@ -86,4 +80,3 @@ package perft
 // 	fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited\n", leafNodes.LeafNodes)
 // 	leafNodes.Mu.Unlock()
 // }
-//
