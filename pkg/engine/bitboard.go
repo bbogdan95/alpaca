@@ -65,6 +65,8 @@ func CountBits(b uint64) int {
 	return count
 }
 
+// InitBitMasks initializes the SetMask and ClearMask arrays to facilitate bit manipulation.
+// SetMask contains individual bits set at specific indices, and ClearMask contains bits cleared at specific indices.
 func InitBitMasks() {
 	for index := 0; index < 64; index++ {
 		SetMask[index] = 1 << index

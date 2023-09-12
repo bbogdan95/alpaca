@@ -1,9 +1,10 @@
 package perft
 
 import (
-	"alpaca-chess/pkg/engine"
 	"fmt"
 	"os"
+
+	"github.com/bbogdan95/alpaca/pkg/engine"
 )
 
 var leafNodes uint64

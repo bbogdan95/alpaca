@@ -1,8 +1,8 @@
 package main
 
 import (
-	engine "alpaca-chess/pkg/engine"
-	"alpaca-chess/pkg/perft"
+	"github.com/bbogdan95/alpaca/pkg/engine"
+	"github.com/bbogdan95/alpaca/pkg/perft"
 )
 
 func main() {

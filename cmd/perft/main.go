@@ -1,13 +1,14 @@
 package main
 
 import (
-	"alpaca-chess/pkg/engine"
-	"alpaca-chess/pkg/perft"
 	"bufio"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/bbogdan95/alpaca/pkg/engine"
+	"github.com/bbogdan95/alpaca/pkg/perft"
 )
 
 func main() {
@@ -38,7 +39,6 @@ func PerftTestSuite(filepath string) {
 
 		fmt.Printf("%s\n", parts[0])
 		for _, test := range parts[1:] {
-			// if partsIndex <= 2 {
 			testParts := strings.Split(test, " ")
 
 			depthChar := testParts[0][1]
@@ -64,7 +64,6 @@ func PerftTestSuite(filepath string) {
 			} else {
 				fmt.Printf("%s\n", "✅")
 			}
-			// }
 		}
 	}
 
