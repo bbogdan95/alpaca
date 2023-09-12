@@ -1,5 +1,27 @@
 package engine
 
+// ParseFen parses a FEN (Forsyth-Edwards Notation) string and sets up the board
+// according to the specified position.
+//
+// This method takes a FEN string and configures the internal state of the Board
+// structure to match the specified position. FEN is a standard notation used to
+// describe a chess position, including piece placement, castling rights, en passant
+// target square, and other game state information.
+//
+// Parameters:
+//   - fen: A string containing the FEN representation of the chess position.
+//
+// The method iterates through the FEN string, interpreting its components, and sets
+// up the board accordingly. It also computes the position key (Zobrist key) and
+// updates various lists and material counts based on the position.
+//
+// Example usage:
+//   var board Board
+//   board.ParseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+//   // The board is now set up with the specified position.
+//
+// Note: The input FEN string should be correctly formatted and represent a valid
+// chess position.
 func (b *Board) ParseFen(fen string) {
 	rank := RANK_8
 	file := FILE_A

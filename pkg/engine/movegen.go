@@ -7,16 +7,56 @@ type Move struct {
 	Score int
 }
 
+// MoveList is a data structure used to store a list of chess moves.
+//
+// The MoveList struct represents a list of chess moves, with each move
+// being encoded and stored in the 'Moves' array. The 'Count' field keeps
+// track of the number of moves in the list. This data structure is
+// used for move generation and move ordering within the chess engine.
+//
+// Fields:
+//   - Moves: An array of encoded chess moves.
+//   - Count: The number of moves currently in the list.
 type MoveList struct {
 	Moves [MAXPOSITIONMOVES]Move
-	// number of moves
 	Count int
 }
 
+// NewMove constructs a new encoded chess move from its components.
+//
+// Parameters:
+//   - from: The source square of the move (0-119).
+//   - to: The destination square of the move (0-119).
+//   - captured: The captured piece type (if any) (EMPTY for no capture).
+//   - promoted: The promoted piece type (if any) (EMPTY for no promotion).
+//   - fileRank: A file and rank combination that can be used for special move flags.
+//
+// Returns:
+//   - An integer representing the encoded chess move.
+//
+// The NewMove function encodes a chess move by packing the source square,
+// destination square, captured piece type, and promoted piece type into a
+// single integer. It also allows additional information to be encoded using
+// the 'fileRank' parameter, such as flags for en passant, pawn starting move,
+// castling, capture, and promotion.
 func NewMove(from, to, captured, promoted, fileRank int) int {
 	return (((from) | (to << 7) | (captured << 14) | (promoted << 20)) | fileRank)
 }
 
+// PrintMoveList prints the contents of a MoveList for debugging or display purposes.
+//
+// This method displays the number of moves in the MoveList and then iterates
+// through each move, printing its index, the human-readable representation of
+// the move, and its associated score (if available).
+//
+// Parameters:
+//   - ml: A pointer to the MoveList to be printed.
+//
+// The printed output includes the move index (1-based), the move in standard
+// algebraic notation (e.g., "e2e4" for a pawn move from e2 to e4), and an
+// optional score associated with the move. This function is useful for examining
+// the list of generated moves during debugging or for displaying move options
+// to the user.
 func (ml *MoveList) PrintMoveList() {
 	fmt.Printf("MoveList: %d\n", ml.Count)
 
@@ -27,6 +67,20 @@ func (ml *MoveList) PrintMoveList() {
 	fmt.Printf("End movelist ----\n\n")
 }
 
+// AddQuietMove adds a quiet (non-capturing) chess move to the MoveList.
+//
+// This method is used to add a quiet move to the MoveList, which typically
+// represents pawn or piece moves that do not result in captures. It checks
+// whether the source square and destination square of the move are on the
+// chessboard. If either of them is off the board, it raises a panic, as
+// adding an invalid move is not allowed.
+//
+// Parameters:
+//   - move: The encoded chess move to be added to the MoveList.
+//
+//
+// Note: It's essential to ensure that both source and destination squares of
+// the move are on the board before adding the move to the list.
 func (ml *MoveList) AddQuietMove(move int) {
 	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) {
 		panic("cannot add quiet move -- sq offboard")
@@ -37,6 +91,18 @@ func (ml *MoveList) AddQuietMove(move int) {
 	ml.Count++
 }
 
+// AddCaptureMove adds a capturing chess move to the MoveList.
+//
+// This method is used to add a capturing move to the MoveList, which represents
+// moves where one piece captures another. It checks whether the source square
+// and destination square of the move are on the chessboard. If either of them
+// is off the board, it raises a panic, as adding an invalid move is not allowed.
+//
+// Parameters:
+//   - move: The encoded chess move to be added to the MoveList.
+//
+// Note: It's essential to ensure that both source and destination squares of
+// the move are on the board before adding the move.
 func (ml *MoveList) AddCaptureMove(move int) {
 	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) {
 		panic("cannot add quiet move -- sq offboard (2)")
@@ -47,6 +113,18 @@ func (ml *MoveList) AddCaptureMove(move int) {
 	ml.Count++
 }
 
+// AddEnPassantMove adds an en passant chess move to the MoveList.
+//
+// This method is used to add an en passant move to the MoveList, which represents
+// a special type of capture in chess. It checks whether the source square
+// and destination square of the move are on the chessboard. If either of them
+// is off the board, it raises a panic, as adding an invalid move is not allowed.
+//
+// Parameters:
+//   - move: The encoded chess move to be added to the MoveList.
+//
+// Note: It's essential to ensure that both source and destination squares of
+// the move are on the board before adding the move.
 func (ml *MoveList) AddEnPassantMove(move int) {
 	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) {
 		panic("cannot add quiet move -- sq offboard (3)")
@@ -117,6 +195,24 @@ func (ml *MoveList) AddBlackPawnMove(from int, to int) {
 	}
 }
 
+// GenerateAllMoves generates all legal chess moves for the current board position
+// and populates them in the provided MoveList (ml).
+//
+// This function is responsible for generating all possible legal moves for the
+// current side to move and adding them to the MoveList. It considers various types
+// of moves, including pawn moves, en passant captures, castling, sliding piece
+// moves, and non-sliding piece moves. The generated moves are suitable for further
+// evaluation and searching in the chess engine.
+//
+// Parameters:
+//   - b: A pointer to the Board structure representing the current chess position.
+//   - ml: A pointer to the MoveList where the generated moves will be stored.
+//
+// The generated moves are added to the MoveList, which can then be used for move
+// ordering and searching within the chess engine.
+//
+// Note: This function assumes that the board position is correctly set up, and the
+// CheckBoard function is called before generating moves to ensure the board's integrity.
 func GenerateAllMoves(b *Board, ml *MoveList) {
 	b.CheckBoard()
 

@@ -2,40 +2,48 @@ package engine
 
 import "fmt"
 
+// FR2SQ converts file and rank coordinates to a square index on a 120-square board.
+//
+// This function takes file (column) and rank (row) coordinates and calculates the
+// corresponding square index on a 120-square board representation. The square index
+// is returned as an integer value.
+//
+// Parameters:
+//   - f: The file (column) coordinate, where 'a' corresponds to 0, 'b' to 1, and so on.
+//   - r: The rank (row) coordinate, where '1' corresponds to 0, '2' to 1, and so on.
+//
+// Returns:
+//   - An integer representing the square index on a 120-square board.
+//
+// Example usage:
+//   squareIndex := FR2SQ(2, 3) // Converts file 'b' and rank '4' to square index.
+//
+// Note: This function is useful for converting human-readable chess coordinates to
+// internal square indices used in the board representation.
 func FR2SQ(f, r int) int {
 	return (21 + f) + (r * 10)
 }
 
-// Move flag En Passant
-var MoveFlagEnPassant = 0x40000
-
-// Move flag Pawn Start
-var MoveFlagPawnStart = 0x80000
-
-// Move flag Castle
-var MoveFlagCastle = 0x1000000
-
-// Move flag Capture
-var MoveFlagCapture = 0x7C000
-
-// Move flag Promoted
-var MoveFlagPromotion = 0xF00000
-
-func GetFrom(move int) int {
-	return move & 0x7F
-}
-func GetToSq(move int) int {
-	return (move >> 7) & 0x7F
-}
-func GetCaptured(move int) int {
-	return (move >> 14) & 0xF
-}
-func GetPromoted(move int) int {
-	return (move >> 20) & 0xF
-}
-
-// Takes a square in the 120 board square representation
-// and returns its string notation. (eq. sq 21 is a1)
+// PrintSq converts a square index to its human-readable algebraic notation.
+//
+// This function takes a square index on a chessboard (in 120-square format) and
+// converts it to its corresponding algebraic notation. The algebraic notation
+// represents the square's file (column) and rank (row) on the chessboard, such
+// as "a1" for the bottom-left square and "h8" for the top-right square.
+// Bewere that our internal representation is reversed, so that a1 is on the top-left
+// and h8 is on the bottom right.
+//
+// Parameters:
+//   - sq: The square index on a 120-square board.
+//
+// Returns:
+//   - A string containing the algebraic notation of the square.
+//
+// Example usage:
+//   squareNotation := PrintSq(34) // Converts square index 34 to "c4".
+//
+// Note: This function is useful for displaying chess positions and moves in a
+// human-readable format.
 func PrintSq(sq int) string {
 	file := FilesBrd[sq]
 	rank := RanksBrd[sq]
@@ -43,32 +51,24 @@ func PrintSq(sq int) string {
 	return fmt.Sprintf("%c%c", ('a' + file), ('1' + rank))
 }
 
-// Prints algebraic notation string move
-func PrintMove(move int) string {
-	fileFrom := FilesBrd[GetFrom(move)]
-	rankFrom := RanksBrd[GetFrom(move)]
-
-	fileTo := FilesBrd[GetToSq(move)]
-	rankTo := RanksBrd[GetToSq(move)]
-
-	promoted := GetPromoted(move)
-
-	if promoted != 0 {
-		pieceRune := 'q'
-		if PieceKnight[promoted] == TRUE {
-			pieceRune = 'n'
-		} else if PieceRookQueen[promoted] == TRUE && PieceBishopQueen[promoted] == FALSE {
-			pieceRune = 'r'
-		} else if PieceRookQueen[promoted] == FALSE && PieceBishopQueen[promoted] == TRUE {
-			pieceRune = 'b'
-		}
-
-		return fmt.Sprintf("%c%c%c%c%c", ('a' + fileFrom), ('1' + rankFrom), ('a' + fileTo), ('1' + rankTo), pieceRune)
-	} else {
-		return fmt.Sprintf("%c%c%c%c", ('a' + fileFrom), ('1' + rankFrom), ('a' + fileTo), ('1' + rankTo))
-	}
-}
-
+// InitFilesRanksBrd initializes the FilesBrd and RanksBrd arrays for square indexing.
+//
+// This function sets up the `FilesBrd` and `RanksBrd` arrays to enable efficient
+// conversion between square indices and their corresponding file (column) and rank
+// (row) coordinates. It assigns file and rank values to each square index on a
+// 120-square board representation.
+//
+// The `FilesBrd` array stores the file (column) of each square, and the `RanksBrd`
+// array stores the rank (row) of each square. Both arrays are used to convert square
+// indices to human-readable algebraic notation and vice versa.
+//
+// Example usage:
+//   InitFilesRanksBrd() // Initializes the FilesBrd and RanksBrd arrays.
+//   file := FilesBrd[sq] // Retrieves the file (column) of a square.
+//   rank := RanksBrd[sq] // Retrieves the rank (row) of a square.
+//
+// Note: This function should be called once to initialize the arrays before using
+// them for square indexing.
 func InitFilesRanksBrd() {
 	for i := 0; i < BRD_SQ_NUM; i++ {
 		FilesBrd[i] = OFFBOARD
@@ -84,6 +84,27 @@ func InitFilesRanksBrd() {
 	}
 }
 
+// UpdateListsMaterial updates the internal lists and material values
+// for the given chess position on the board.
+//
+// This function iterates over all squares on the board, identifies the pieces,
+// updates various lists and material counts, and maintains the piece locations.
+//
+// Parameters:
+//   - b: A pointer to the Board structure representing the current chess position.
+//
+// The following lists and values are updated by this function:
+//   - BigPCE: Count of big pieces (rooks and queens) for each color.
+//   - MajPCE: Count of major pieces (queens and kings) for each color.
+//   - MinPCE: Count of minor pieces (knights and bishops) for each color.
+//   - Material: Total material value for each color.
+//   - PList: Piece lists containing the positions of each piece type.
+//   - PCENum: Count of each piece type on the board.
+//   - KingSq: Square positions of the kings for both White and Black.
+//   - Pawns: Bitboards representing pawn locations for both colors.
+//
+// Used to efficiently handles piece type, color, and position tracking
+// to support chess engine operations.
 func UpdateListsMaterial(b *Board) {
 	for i := 0; i < BRD_SQ_NUM; i++ {
 		sq := i
@@ -124,11 +145,12 @@ func UpdateListsMaterial(b *Board) {
 	}
 }
 
-// Check is sq is onboard
+// Check if sq is onboard
 func SqOnBoard(sq int) bool {
 	return FilesBrd[sq] != OFFBOARD
 }
 
+// Check if sq is offboard
 func SqOffBoard(sq int) bool {
 	return FilesBrd[sq] == OFFBOARD
 }
@@ -142,6 +164,7 @@ func SideValid(side int) bool {
 	}
 }
 
+// Check if file/rank is valid
 func FileRankValid(fileRank int) bool {
 	if fileRank >= 0 && fileRank <= 7 {
 		return true
@@ -150,6 +173,7 @@ func FileRankValid(fileRank int) bool {
 	}
 }
 
+// Check if piece is valid & empty
 func PieceValidEmpty(piece int) bool {
 	if piece >= EMPTY && piece <= BK {
 		return true
@@ -158,6 +182,7 @@ func PieceValidEmpty(piece int) bool {
 	}
 }
 
+// Check if piece is valid
 func PieceValid(piece int) bool {
 	if piece >= WP && piece <= BK {
 		return true
