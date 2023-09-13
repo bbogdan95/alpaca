@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 /*
 A chess move is represented as a 32-bit integer (int32).
@@ -30,6 +33,8 @@ var MoveFlagCapture = 0x7C000
 
 // Move flag Promoted
 var MoveFlagPromotion = 0xF00000
+
+var NOMOVE = 0
 
 // Extract the 'from' part of a move
 func GetFrom(move int) int {
@@ -62,7 +67,8 @@ func GetPromoted(move int) int {
 //   - A string containing the human-readable algebraic notation of the move.
 //
 // Example usage:
-//   moveStr := PrintMove(encodedMove) // Converts the encoded move to algebraic notation.
+//
+//	moveStr := PrintMove(encodedMove) // Converts the encoded move to algebraic notation.
 //
 // Note: This function handles both standard moves and moves with piece promotions, such as
 // pawn promotions to queen, rook, bishop, or knight.
@@ -89,4 +95,54 @@ func PrintMove(move int) string {
 	} else {
 		return fmt.Sprintf("%c%c%c%c", ('a' + fileFrom), ('1' + rankFrom), ('a' + fileTo), ('1' + rankTo))
 	}
+}
+
+func ParseMove(move string, b *Board) (int, error) {
+	if move[1] > '8' || move[1] < '1' {
+		return NOMOVE, nil
+	}
+	if move[3] > '8' || move[3] < '1' {
+		return NOMOVE, nil
+	}
+	if move[0] > 'h' || move[0] < 'a' {
+		return NOMOVE, nil
+	}
+	if move[2] > 'h' || move[2] < 'a' {
+		return NOMOVE, nil
+	}
+
+	from := FR2SQ(int(move[0]-'a'), int(move[1]-'1'))
+	to := FR2SQ(int(move[2]-'a'), int(move[3]-'1'))
+
+	if SqOffBoard(from) || SqOffBoard(to) {
+		return 0, errors.New("sq is offboard")
+	}
+
+	var ml MoveList
+	GenerateAllMoves(b, &ml)
+
+	promotedPiece := EMPTY
+
+	for i := 0; i < ml.Count; i++ {
+		m := ml.Moves[i].Move
+		if GetFrom(m) == from && GetToSq(m) == to {
+			promotedPiece = GetPromoted(m)
+			if promotedPiece != EMPTY {
+				if PieceRookQueen[promotedPiece] != 0 && PieceBishopQueen[promotedPiece] == 0 && move[4] == 'r' {
+					return m, nil
+				} else if PieceRookQueen[promotedPiece] == 0 && PieceBishopQueen[promotedPiece] != 0 && move[4] == 'b' {
+					return m, nil
+				} else if PieceRookQueen[promotedPiece] != 0 && PieceBishopQueen[promotedPiece] != 0 && move[4] == 'q' {
+					return m, nil
+				} else if PieceKnight[promotedPiece] != 0 && move[4] == 'n' {
+					return m, nil
+				}
+				continue
+			}
+
+			return m, nil
+		}
+	}
+
+	return NOMOVE, nil
 }

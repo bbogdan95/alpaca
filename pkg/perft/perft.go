@@ -3,6 +3,7 @@ package perft
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/bbogdan95/alpaca/pkg/engine"
 )
@@ -47,6 +48,7 @@ func PerftTest(depth int, b *engine.Board, log bool) (uint64, error) {
 		b.PrintBoard(os.Stdout)
 		fmt.Fprintf(os.Stdout, "\nStarting Test To Depth:%d\n", depth)
 	}
+	start := time.Now()
 
 	leafNodes = 0
 	ml := &engine.MoveList{}
@@ -77,7 +79,7 @@ func PerftTest(depth int, b *engine.Board, log bool) (uint64, error) {
 	}
 
 	if log {
-		fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited\n", leafNodes)
+		fmt.Fprintf(os.Stdout, "\nTest Complete : %d nodes visited in %s\n", leafNodes, time.Since(start))
 	}
 
 	return leafNodes, nil

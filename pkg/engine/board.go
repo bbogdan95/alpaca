@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 )
 
 type Undo struct {
@@ -444,9 +443,6 @@ func (b *Board) MakeMove(move int) (int, error) {
 	isPromotedPiece := GetPromoted(move)
 	if isPromotedPiece != EMPTY {
 		if !PieceValid(isPromotedPiece) || PiecePawn[isPromotedPiece] == TRUE {
-			b.PrintBoard(os.Stdout)
-			fmt.Println(isPromotedPiece, PieceValid(isPromotedPiece), PiecePawn[isPromotedPiece])
-			fmt.Println(PrintMove(move))
 			return 0, errors.New("illegal piece promotion")
 		}
 
@@ -554,4 +550,16 @@ func (b *Board) TakeMove() {
 	}
 
 	b.CheckBoard()
+}
+
+// from the last time the FiftyMove was set to zero, loop over and check for repetition
+func (b *Board) IsRepetition() bool {
+	for i := b.HisPly - b.FiftyMove; i < b.HisPly-1; i++ {
+		// will we ever go over MAXGAMEMOVES ?
+		if b.PosKey == b.History[i].PosKey {
+			return true
+		}
+	}
+
+	return false
 }
