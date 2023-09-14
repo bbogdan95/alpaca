@@ -37,7 +37,7 @@ func main() {
 			fmt.Printf("PvLine of %d Moves: ", max)
 			for pvNum := 0; pvNum < max; pvNum++ {
 				move := board.PvArray[pvNum]
-				fmt.Printf(" %s", engine.PrintMove(move))
+				fmt.Printf(" %s (%d)", engine.PrintMove(move), move)
 			}
 			fmt.Printf("\n")
 
@@ -50,7 +50,7 @@ func main() {
 				panic(err)
 			}
 			if move != engine.NOMOVE {
-				board.PvTable.StorePvMove(move)
+				board.PvTable.StorePvMove(board, move)
 				board.MakeMove(move)
 				// if board.IsRepetition() {
 				// 	fmt.Printf("REP SEEN\n")
