@@ -34,6 +34,9 @@ type Board struct {
 	CastlePerm int
 	History    [MAXGAMESMOVES]Undo
 	PList      [13][10]int
+
+	PvTable PvTable
+	PvArray [MAXDEPTH]int
 }
 
 func (b *Board) PrintBoard(out io.Writer) {
@@ -214,6 +217,8 @@ func (b *Board) ResetBoard() {
 	b.HisPly = 0
 	b.CastlePerm = 0
 	b.PosKey = 0
+
+	b.PvTable = make(PvTable, 0)
 }
 
 func (b *Board) HashPiece(piece, sq int) {

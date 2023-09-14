@@ -391,3 +391,25 @@ func GenerateAllMoves(b *Board, ml *MoveList) {
 		pieceIndex++
 	}
 }
+
+func MoveExists(b *Board, move int) int {
+	var ml MoveList
+	GenerateAllMoves(b, &ml)
+	for i := 0; i < ml.Count; i++ {
+		res, err := b.MakeMove(move)
+		if err != nil {
+			panic(err)
+		}
+
+		if res == 0 {
+			continue
+		}
+
+		b.TakeMove()
+		if ml.Moves[i].Move == move {
+			return TRUE
+		}
+	}
+
+	return FALSE
+}

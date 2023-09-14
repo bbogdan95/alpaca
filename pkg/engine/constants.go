@@ -145,6 +145,7 @@ const (
 
 	MAXGAMESMOVES    = 2048
 	MAXPOSITIONMOVES = 256
+	MAXDEPTH         = 64
 )
 
 const (

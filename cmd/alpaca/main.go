@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/bbogdan95/alpaca/pkg/engine"
-	"github.com/bbogdan95/alpaca/pkg/perft"
 )
 
 func main() {
@@ -33,7 +32,15 @@ func main() {
 		if input[0] == 'q' {
 			break
 		} else if input[0] == 'p' {
-			perft.PerftTest(4, board, true)
+			//perft.PerftTest(4, board, true)
+			max := engine.GetPvLine(4, board)
+			fmt.Printf("PvLine of %d Moves: ", max)
+			for pvNum := 0; pvNum < max; pvNum++ {
+				move := board.PvArray[pvNum]
+				fmt.Printf(" %s", engine.PrintMove(move))
+			}
+			fmt.Printf("\n")
+
 		} else if input[0] == 't' {
 			board.TakeMove()
 			continue
@@ -43,6 +50,7 @@ func main() {
 				panic(err)
 			}
 			if move != engine.NOMOVE {
+				board.PvTable.StorePvMove(move)
 				board.MakeMove(move)
 				// if board.IsRepetition() {
 				// 	fmt.Printf("REP SEEN\n")
