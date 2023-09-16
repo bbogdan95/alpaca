@@ -152,3 +152,6 @@ const (
 	FALSE = iota
 	TRUE
 )
+
+const INFINITE = 30000
+const MATE = 29000

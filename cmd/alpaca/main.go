@@ -8,12 +8,16 @@ import (
 	"github.com/bbogdan95/alpaca/pkg/engine"
 )
 
+var WAC1 = "2rr3k/pp3pp1/1nnqbN1p/3pN3/2pP4/2P3Q1/PPB4P/R4RK1 w - -"
+
 func main() {
 	engine.InitAll()
 
 	board := &engine.Board{}
-	board.ParseFen(engine.START_FEN)
+	board.ParseFen(WAC1)
 	board.CheckBoard()
+
+	s := &engine.SearchInfo{}
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -31,15 +35,9 @@ func main() {
 
 		if input[0] == 'q' {
 			break
-		} else if input[0] == 'p' {
-			//perft.PerftTest(4, board, true)
-			max := engine.GetPvLine(4, board)
-			fmt.Printf("PvLine of %d Moves: ", max)
-			for pvNum := 0; pvNum < max; pvNum++ {
-				move := board.PvArray[pvNum]
-				fmt.Printf(" %s (%d)", engine.PrintMove(move), move)
-			}
-			fmt.Printf("\n")
+		} else if input[0] == 's' {
+			s.Depth = 4
+			engine.SearchPosition(board, s)
 
 		} else if input[0] == 't' {
 			board.TakeMove()
