@@ -142,4 +142,5 @@ func InitAll() {
 	InitBitMasks()
 	InitHashKeys()
 	InitFilesRanksBrd()
+	InitMvvLva()
 }

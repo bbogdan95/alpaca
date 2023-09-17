@@ -221,7 +221,7 @@ func (b *Board) ResetBoard() {
 	b.CastlePerm = 0
 	b.PosKey = 0
 
-	b.PvTable = PvTable{}
+	// b.PvTable = PvTable{}
 }
 
 func (b *Board) HashPiece(piece, sq int) {

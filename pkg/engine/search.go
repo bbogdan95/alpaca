@@ -70,15 +70,78 @@ func ClearForSearch(b *Board, s *SearchInfo) {
 }
 
 func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
-	return 0
+	b.CheckBoard()
+	s.Nodes++
+
+	if b.IsRepetition() || b.FiftyMove >= 100 {
+		return 0
+	}
+
+	if b.Ply > MAXDEPTH-1 {
+		return EvalPosition(b)
+	}
+
+	score := EvalPosition(b)
+
+	if score >= beta {
+		return beta
+	}
+
+	if score >= alpha {
+		alpha = score
+	}
+
+	var ml MoveList
+	GenerateAllCaptures(b, &ml)
+
+	legal := 0
+	oldAlpha := alpha
+	bestMove := NOMOVE
+	score = -INFINITE
+
+	for i := 0; i < ml.Count; i++ {
+
+		PickNextMove(i, &ml)
+
+		res, err := b.MakeMove(ml.Moves[i].Move)
+		if err != nil {
+			panic(err)
+		}
+		if res == FALSE {
+			continue
+		}
+
+		legal++
+
+		score = -Quiescence(-beta, -alpha, b, s)
+		b.TakeMove()
+
+		if score > alpha {
+			if score >= beta {
+				if legal == 1 {
+					s.FailHighFirst++
+				}
+				s.FailHigh++
+				return beta
+			}
+
+			alpha = score
+			bestMove = ml.Moves[i].Move
+		}
+	}
+
+	if alpha != oldAlpha {
+		b.PvTable.StorePvMove(b, bestMove)
+	}
+
+	return alpha
 }
 
 func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	b.CheckBoard()
 
 	if depth == 0 {
-		s.Nodes++
-		return EvalPosition(b)
+		return Quiescence(alpha, beta, b, s)
 	}
 
 	s.Nodes++
@@ -98,8 +161,21 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	oldAlpha := alpha
 	bestMove := NOMOVE
 	score := -INFINITE
+	PvMove := b.PvTable.ProbePvTable(b)
+
+	if PvMove != NOMOVE {
+		for i := 0; i < ml.Count; i++ {
+			if ml.Moves[i].Move == PvMove {
+				ml.Moves[i].Score = 2000000
+				break
+			}
+		}
+	}
 
 	for i := 0; i < ml.Count; i++ {
+
+		PickNextMove(i, &ml)
+
 		res, err := b.MakeMove(ml.Moves[i].Move)
 		if err != nil {
 			panic(err)
@@ -119,11 +195,21 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 					s.FailHighFirst++
 				}
 				s.FailHigh++
+
+				if ml.Moves[i].Move&MoveFlagCapture == 0 {
+					b.SearchKillers[1][b.Ply] = b.SearchKillers[0][b.Ply]
+					b.SearchKillers[0][b.Ply] = ml.Moves[i].Move
+				}
+
 				return beta
 			}
 
 			alpha = score
 			bestMove = ml.Moves[i].Move
+
+			if ml.Moves[i].Move&MoveFlagCapture == 0 {
+				b.SearchHistory[b.Pieces[GetFrom(bestMove)]][GetToSq(bestMove)] += depth
+			}
 		}
 	}
 
@@ -140,4 +226,21 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	}
 
 	return alpha
+}
+
+func PickNextMove(moveNum int, ml *MoveList) {
+	var temp Move
+	bestScore := 0
+	bestNum := moveNum
+
+	for i := moveNum; i < ml.Count; i++ {
+		if ml.Moves[i].Score > bestScore {
+			bestScore = ml.Moves[i].Score
+			bestNum = i
+		}
+	}
+
+	temp = ml.Moves[moveNum]
+	ml.Moves[moveNum] = ml.Moves[bestNum]
+	ml.Moves[bestNum] = temp
 }
