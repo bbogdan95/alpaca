@@ -17,10 +17,11 @@ type PvTable struct {
 }
 
 func (pv *PvTable) ClearPvTable() {
-	for i := range pv.Table {
-		pv.Table[i].Move = NOMOVE
-		pv.Table[i].PosKey = 0
-	}
+	// for i := range pv.Table {
+	// 	pv.Table[i].Move = NOMOVE
+	// 	pv.Table[i].PosKey = 0
+	// }
+	pv.Table = [PVTABLESIZE]PvEntry{}
 }
 
 func (pv *PvTable) StorePvMove(b *Board, move int) {

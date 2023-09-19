@@ -1,6 +1,10 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
 // FR2SQ converts file and rank coordinates to a square index on a 120-square board.
 //
@@ -16,7 +20,8 @@ import "fmt"
 //   - An integer representing the square index on a 120-square board.
 //
 // Example usage:
-//   squareIndex := FR2SQ(2, 3) // Converts file 'b' and rank '4' to square index.
+//
+//	squareIndex := FR2SQ(2, 3) // Converts file 'b' and rank '4' to square index.
 //
 // Note: This function is useful for converting human-readable chess coordinates to
 // internal square indices used in the board representation.
@@ -40,7 +45,8 @@ func FR2SQ(f, r int) int {
 //   - A string containing the algebraic notation of the square.
 //
 // Example usage:
-//   squareNotation := PrintSq(34) // Converts square index 34 to "c4".
+//
+//	squareNotation := PrintSq(34) // Converts square index 34 to "c4".
 //
 // Note: This function is useful for displaying chess positions and moves in a
 // human-readable format.
@@ -63,9 +69,10 @@ func PrintSq(sq int) string {
 // indices to human-readable algebraic notation and vice versa.
 //
 // Example usage:
-//   InitFilesRanksBrd() // Initializes the FilesBrd and RanksBrd arrays.
-//   file := FilesBrd[sq] // Retrieves the file (column) of a square.
-//   rank := RanksBrd[sq] // Retrieves the rank (row) of a square.
+//
+//	InitFilesRanksBrd() // Initializes the FilesBrd and RanksBrd arrays.
+//	file := FilesBrd[sq] // Retrieves the file (column) of a square.
+//	rank := RanksBrd[sq] // Retrieves the rank (row) of a square.
 //
 // Note: This function should be called once to initialize the arrays before using
 // them for square indexing.
@@ -188,5 +195,40 @@ func PieceValid(piece int) bool {
 		return true
 	} else {
 		return false
+	}
+}
+
+func InputWaiting() bool {
+	// stat, _ := os.Stdin.Stat()
+	// return (stat.Mode() & os.ModeCharDevice) != 0
+
+	file := os.Stdin
+	fi, err := file.Stat()
+	if err != nil {
+		fmt.Println("file.Stat()", err)
+	}
+	size := fi.Size()
+	if size > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func ReadInput(s *SearchInfo) {
+	var bytes int
+	input := make([]byte, 256)
+
+	if InputWaiting() {
+		s.Stopped = TRUE
+		for bytes < 0 {
+			bytes, _ = os.Stdin.Read(input)
+		}
+		inputStr := string(input[:bytes])
+		inputStr = strings.TrimSpace(inputStr)
+
+		if len(inputStr) > 0 && inputStr[:4] == "quit" {
+			s.Quit = TRUE
+		}
 	}
 }

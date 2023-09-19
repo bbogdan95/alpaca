@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 )
 
 type Undo struct {
@@ -118,6 +119,9 @@ func InitSq120To64() {
 }
 
 func (b *Board) CheckBoard() {
+	if os.Getenv("DEBUG") != "1" {
+		return
+	}
 	tempPceNum := [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	tempBigPce := [2]int{0, 0}
 	tempMajPce := [2]int{0, 0}
@@ -220,8 +224,6 @@ func (b *Board) ResetBoard() {
 	b.HisPly = 0
 	b.CastlePerm = 0
 	b.PosKey = 0
-
-	// b.PvTable = PvTable{}
 }
 
 func (b *Board) HashPiece(piece, sq int) {
@@ -369,7 +371,10 @@ func (b *Board) MakeMove(move int) (int, error) {
 	side := b.Side
 
 	if SqOffBoard(from) || SqOffBoard(to) || !SideValid(side) || !PieceValid(b.Pieces[from]) {
-
+		fmt.Println("=========================")
+		b.PrintBoard(os.Stdout)
+		fmt.Println(SqOffBoard(from), SqOffBoard(to), SideValid(side), PieceValid(b.Pieces[from]), SQ64[from], SQ64[to], PrintMove(move))
+		fmt.Println("=========================")
 		return 0, errors.New("cannot make move")
 	}
 
@@ -417,7 +422,6 @@ func (b *Board) MakeMove(move int) (int, error) {
 
 	if captured != EMPTY {
 		if !PieceValid(captured) {
-
 			return 0, errors.New("captured piece invalid")
 		}
 
@@ -570,9 +574,4 @@ func (b *Board) IsRepetition() bool {
 	}
 
 	return false
-}
-
-// Check if time is up, or interrupted from GUI
-func CheckUp() {
-
 }

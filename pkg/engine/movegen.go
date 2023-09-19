@@ -1,6 +1,8 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Move struct {
 	Move  int
@@ -90,13 +92,14 @@ func (ml *MoveList) PrintMoveList() {
 // Parameters:
 //   - move: The encoded chess move to be added to the MoveList.
 //
-//
 // Note: It's essential to ensure that both source and destination squares of
 // the move are on the board before adding the move to the list.
 func (ml *MoveList) AddQuietMove(b *Board, move int) {
 	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) {
 		panic("cannot add quiet move -- sq offboard")
 	}
+
+	b.CheckBoard()
 
 	ml.Moves[ml.Count].Move = move
 
@@ -124,9 +127,11 @@ func (ml *MoveList) AddQuietMove(b *Board, move int) {
 // Note: It's essential to ensure that both source and destination squares of
 // the move are on the board before adding the move.
 func (ml *MoveList) AddCaptureMove(b *Board, move int) {
-	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) {
+	if SqOffBoard(GetFrom(move)) || SqOffBoard(GetToSq(move)) || !PieceValid(GetCaptured(move)) {
 		panic("cannot add quiet move -- sq offboard (2)")
 	}
+
+	b.CheckBoard()
 
 	ml.Moves[ml.Count].Move = move
 	ml.Moves[ml.Count].Score = MvvLvaScores[GetCaptured(move)][b.Pieces[GetFrom(move)]] + 1000000
@@ -547,6 +552,7 @@ func MoveExists(b *Board, move int) int {
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(move)
 		if err != nil {
+			fmt.Println("Couldnt make move", PrintMove(move))
 			panic(err)
 		}
 

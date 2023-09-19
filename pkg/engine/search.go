@@ -27,23 +27,32 @@ type SearchInfo struct {
 // if we have enough time, search for depth = 2, and so on
 func SearchPosition(b *Board, s *SearchInfo) {
 
+	bestMove := NOMOVE
 	ClearForSearch(b, s)
 
 	for currentDepth := 1; currentDepth <= s.Depth; currentDepth++ {
 		bestScore := AlphaBeta(-INFINITE, INFINITE, currentDepth, TRUE, b, s)
-		GetPvLine(currentDepth, b)
-		bestMove := b.PvArray[0]
 
-		fmt.Printf("Depth: %d score: %d move: %s nodes: %1d", currentDepth, bestScore, PrintMove(bestMove), s.Nodes)
+		if s.Stopped == 1 {
+			break
+		}
 
 		pvMoves := GetPvLine(currentDepth, b)
+		bestMove = b.PvArray[0]
+
+		elapsed := time.Since(s.StartTime).Milliseconds()
+		fmt.Printf("info score cp %d depth %d nodes %1d time %d ", bestScore, currentDepth, s.Nodes, elapsed)
+
+		//pvMoves := GetPvLine(currentDepth, b)
 		fmt.Printf("pv")
 		for i := 0; i < pvMoves; i++ {
 			fmt.Printf(" %s", PrintMove(b.PvArray[i]))
 		}
 		fmt.Printf("\n")
-		fmt.Printf("Ordering: %.2f\n", (s.FailHighFirst / s.FailHigh))
+		//fmt.Printf("Ordering: %.2f\n", (s.FailHighFirst / s.FailHigh))
 	}
+
+	fmt.Printf("bestmove %s\n", PrintMove(bestMove))
 }
 
 func ClearForSearch(b *Board, s *SearchInfo) {
@@ -62,7 +71,6 @@ func ClearForSearch(b *Board, s *SearchInfo) {
 	b.PvTable.ClearPvTable()
 	b.Ply = 0
 
-	s.StartTime = time.Now()
 	s.Stopped = 0
 	s.Nodes = 0
 	s.FailHighFirst = 0
@@ -71,6 +79,14 @@ func ClearForSearch(b *Board, s *SearchInfo) {
 
 func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 	b.CheckBoard()
+	if beta <= alpha {
+		panic("something went wrong")
+	}
+
+	if s.Nodes&2047 == 0 {
+		CheckUp(s)
+	}
+
 	s.Nodes++
 
 	if b.IsRepetition() || b.FiftyMove >= 100 {
@@ -87,7 +103,7 @@ func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 		return beta
 	}
 
-	if score >= alpha {
+	if score > alpha {
 		alpha = score
 	}
 
@@ -115,6 +131,10 @@ func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 
 		score = -Quiescence(-beta, -alpha, b, s)
 		b.TakeMove()
+
+		if s.Stopped == TRUE {
+			return 0
+		}
 
 		if score > alpha {
 			if score >= beta {
@@ -144,9 +164,13 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 		return Quiescence(alpha, beta, b, s)
 	}
 
+	if s.Nodes&2047 == 0 {
+		CheckUp(s)
+	}
+
 	s.Nodes++
 
-	if b.IsRepetition() || b.FiftyMove >= 100 {
+	if (b.IsRepetition() || b.FiftyMove >= 100) && b.Ply != 0 {
 		return 0
 	}
 
@@ -188,6 +212,10 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 
 		score = -AlphaBeta(-beta, -alpha, depth-1, TRUE, b, s)
 		b.TakeMove()
+
+		if s.Stopped == TRUE {
+			return 0
+		}
 
 		if score > alpha {
 			if score >= beta {
@@ -243,4 +271,13 @@ func PickNextMove(moveNum int, ml *MoveList) {
 	temp = ml.Moves[moveNum]
 	ml.Moves[moveNum] = ml.Moves[bestNum]
 	ml.Moves[bestNum] = temp
+}
+
+// Check if time is up, or interrupted from GUI
+func CheckUp(s *SearchInfo) {
+	now := time.Now()
+	if s.Timeset == 1 && now.After(s.StopTime) {
+		s.Stopped = TRUE
+	}
+	ReadInput(s)
 }
