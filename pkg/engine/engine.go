@@ -16,6 +16,9 @@ var SideChar = "wb-"
 var RankChar = "12345678"
 var FileChar = "abcdefgh"
 
+var FileBBMask [8]uint64
+var RankBBMask [8]uint64
+
 // PieceBig is an array that helps identify if a piece is considered "big" (rook or queen).
 // It maps piece types (represented by integers) to a boolean value (TRUE or FALSE).
 var PieceBig = [13]int{FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE}
@@ -142,5 +145,29 @@ func InitAll() {
 	InitBitMasks()
 	InitHashKeys()
 	InitFilesRanksBrd()
+	InitEvalMasks()
 	InitMvvLva()
+}
+
+func InitEvalMasks() {
+	for sq := 0; sq < 8; sq++ {
+		FileBBMask[sq] = 0
+		RankBBMask[sq] = 0
+	}
+
+	for r := RANK_8; r >= RANK_1; r-- {
+		for f := FILE_A; f <= FILE_H; f++ {
+			sq := r*8 + f
+			FileBBMask[f] |= 1 << sq
+			RankBBMask[r] |= 1 << sq
+		}
+	}
+
+	// for r := RANK_8; r >= RANK_1; r-- {
+	// 	PrintBitboard(os.Stdout, RankBBMask[r])
+	// }
+
+	// for f := FILE_A; f <= FILE_H; f++ {
+	// 	PrintBitboard(os.Stdout, FileBBMask[f])
+	// }
 }

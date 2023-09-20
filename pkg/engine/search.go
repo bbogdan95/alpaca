@@ -178,6 +178,11 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 		return EvalPosition(b)
 	}
 
+	inCheck := SqAttacked(b.KingSq[b.Side], b.Side^1, b)
+	if inCheck == 1 {
+		depth++
+	}
+
 	var ml MoveList
 	GenerateAllMoves(b, &ml)
 
@@ -242,7 +247,7 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	}
 
 	if legal == 0 {
-		if SqAttacked(b.KingSq[b.Side], b.Side^1, b) == TRUE {
+		if inCheck == 1 {
 			return -MATE + b.Ply
 		} else {
 			return 0
@@ -279,5 +284,5 @@ func CheckUp(s *SearchInfo) {
 	if s.Timeset == 1 && now.After(s.StopTime) {
 		s.Stopped = TRUE
 	}
-	ReadInput(s)
+	//ReadInput(s)
 }
