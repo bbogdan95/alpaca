@@ -1,41 +1,35 @@
 package engine
 
+import "fmt"
+
 /*
 	Principal Variation Table
 */
-
-// The maximum size of PvEntry on 64-bit systems is 16 bytes
-const PVTABLESIZE = 0x100000 * 2 / 16
-
 type PvEntry struct {
 	PosKey uint64
 	Move   int
 }
 
 type PvTable struct {
-	Table [PVTABLESIZE]PvEntry
+	Table map[string]PvEntry
 }
 
 func (pv *PvTable) ClearPvTable() {
-	// for i := range pv.Table {
-	// 	pv.Table[i].Move = NOMOVE
-	// 	pv.Table[i].PosKey = 0
-	// }
-	pv.Table = [PVTABLESIZE]PvEntry{}
+	pv.Table = map[string]PvEntry{}
 }
 
 func (pv *PvTable) StorePvMove(b *Board, move int) {
-	index := b.PosKey % PVTABLESIZE
+	indexStr := fmt.Sprintf("%d", b.PosKey)
 
-	pv.Table[index] = PvEntry{
+	pv.Table[indexStr] = PvEntry{
 		Move:   move,
 		PosKey: b.PosKey,
 	}
 }
 
 func (pv *PvTable) ProbePvTable(b *Board) int {
-	index := b.PosKey % PVTABLESIZE
-	entry := pv.Table[index]
+	indexStr := fmt.Sprintf("%d", b.PosKey)
+	entry := pv.Table[indexStr]
 
 	return entry.Move
 }
@@ -43,11 +37,21 @@ func (pv *PvTable) ProbePvTable(b *Board) int {
 func GetPvLine(depth int, b *Board) int {
 	move := b.PvTable.ProbePvTable(b)
 	count := 0
+
 	for move != NOMOVE && count < depth {
-		if MoveExists(b, move) == TRUE {
-			b.MakeMove(move)
-			b.PvArray[count] = move
-			count++
+		c, err := MoveExists(b, move)
+		if err != nil {
+			panic(err)
+		}
+		if c == TRUE {
+			res, err := b.MakeMove(move)
+			if err != nil {
+				panic(err)
+			}
+			if res == TRUE {
+				b.PvArray[count] = move
+				count++
+			}
 		} else {
 			break
 		}

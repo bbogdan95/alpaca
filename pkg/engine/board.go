@@ -242,7 +242,7 @@ func (b *Board) HashEP() {
 	b.PosKey ^= PieceKeys[EMPTY][b.EnPassant]
 }
 
-func (b *Board) ClearPiece(sq int) {
+func (b *Board) ClearPiece(sq int) error {
 	if SqOffBoard(sq) {
 		panic("sq offboard")
 	}
@@ -254,7 +254,7 @@ func (b *Board) ClearPiece(sq int) {
 	tPieceNum := -1
 
 	if !PieceValid(piece) {
-		panic("piece invalid")
+		return errors.New(fmt.Sprintln("piece invalid", piece, string(PceChar[piece])))
 	}
 
 	b.HashPiece(piece, sq)
@@ -305,6 +305,8 @@ func (b *Board) ClearPiece(sq int) {
 
 	b.PCENum[piece]--
 	b.PList[piece][tPieceNum] = b.PList[piece][b.PCENum[piece]]
+
+	return nil
 }
 
 func (b *Board) AddPiece(sq int, piece int) {
@@ -371,10 +373,6 @@ func (b *Board) MakeMove(move int) (int, error) {
 	side := b.Side
 
 	if SqOffBoard(from) || SqOffBoard(to) || !SideValid(side) || !PieceValid(b.Pieces[from]) {
-		fmt.Println("=========================")
-		b.PrintBoard(os.Stdout)
-		fmt.Println(SqOffBoard(from), SqOffBoard(to), SideValid(side), PieceValid(b.Pieces[from]), SQ64[from], SQ64[to], PrintMove(move))
-		fmt.Println("=========================")
 		return 0, errors.New("cannot make move")
 	}
 
@@ -425,7 +423,10 @@ func (b *Board) MakeMove(move int) (int, error) {
 			return 0, errors.New("captured piece invalid")
 		}
 
-		b.ClearPiece(to)
+		err := b.ClearPiece(to)
+		if err != nil {
+			return 0, err
+		}
 		b.FiftyMove = 0
 	}
 

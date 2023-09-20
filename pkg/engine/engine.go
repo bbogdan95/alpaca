@@ -19,6 +19,10 @@ var FileChar = "abcdefgh"
 var FileBBMask [8]uint64
 var RankBBMask [8]uint64
 
+var BlackPassedMask [64]uint64
+var WhitePassedMask [64]uint64
+var IsolatedMask [64]uint64
+
 // PieceBig is an array that helps identify if a piece is considered "big" (rook or queen).
 // It maps piece types (represented by integers) to a boolean value (TRUE or FALSE).
 var PieceBig = [13]int{FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE}

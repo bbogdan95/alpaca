@@ -546,14 +546,13 @@ func GenerateAllCaptures(b *Board, ml *MoveList) {
 	}
 }
 
-func MoveExists(b *Board, move int) int {
+func MoveExists(b *Board, move int) (int, error) {
 	var ml MoveList
 	GenerateAllMoves(b, &ml)
 	for i := 0; i < ml.Count; i++ {
 		res, err := b.MakeMove(move)
 		if err != nil {
-			fmt.Println("Couldnt make move", PrintMove(move))
-			panic(err)
+			return 0, err
 		}
 
 		if res == 0 {
@@ -562,9 +561,9 @@ func MoveExists(b *Board, move int) int {
 
 		b.TakeMove()
 		if ml.Moves[i].Move == move {
-			return TRUE
+			return TRUE, nil
 		}
 	}
 
-	return FALSE
+	return FALSE, nil
 }

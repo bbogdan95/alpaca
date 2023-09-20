@@ -43,7 +43,6 @@ func SearchPosition(b *Board, s *SearchInfo) {
 		elapsed := time.Since(s.StartTime).Milliseconds()
 		fmt.Printf("info score cp %d depth %d nodes %1d time %d ", bestScore, currentDepth, s.Nodes, elapsed)
 
-		//pvMoves := GetPvLine(currentDepth, b)
 		fmt.Printf("pv")
 		for i := 0; i < pvMoves; i++ {
 			fmt.Printf(" %s", PrintMove(b.PvArray[i]))
@@ -284,5 +283,5 @@ func CheckUp(s *SearchInfo) {
 	if s.Timeset == 1 && now.After(s.StopTime) {
 		s.Stopped = TRUE
 	}
-	//ReadInput(s)
+	ReadInput(s)
 }
