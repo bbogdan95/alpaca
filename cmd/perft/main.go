@@ -14,7 +14,7 @@ import (
 func main() {
 	engine.InitAll()
 
-	PerftTestSuite("./perftsuite.edp")
+	PerftTestSuite("./perftsuite.epd")
 }
 
 func PerftTestSuite(filepath string) {

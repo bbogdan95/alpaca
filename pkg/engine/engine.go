@@ -19,6 +19,18 @@ var FileChar = "abcdefgh"
 var FileBBMask [8]uint64
 var RankBBMask [8]uint64
 
+/*
+We can AND this with the white pawn mask and if the result is 0
+we know theres no obstacle if front of our pawn trying to promote
+0 0 1 1 1 1 0 0
+0 0 1 1 1 1 0 0
+0 0 1 1 1 1 0 0
+0 0 1 1 1 1 0 0
+0 0 0 x 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+*/
 var BlackPassedMask [64]uint64
 var WhitePassedMask [64]uint64
 var IsolatedMask [64]uint64
@@ -167,11 +179,56 @@ func InitEvalMasks() {
 		}
 	}
 
-	// for r := RANK_8; r >= RANK_1; r-- {
-	// 	PrintBitboard(os.Stdout, RankBBMask[r])
-	// }
+	for sq := 0; sq < 64; sq++ {
+		IsolatedMask[sq] = 0
+		WhitePassedMask[sq] = 0
+		BlackPassedMask[sq] = 0
+	}
 
-	// for f := FILE_A; f <= FILE_H; f++ {
-	// 	PrintBitboard(os.Stdout, FileBBMask[f])
-	// }
+	for sq := 0; sq < 64; sq++ {
+
+		tsq := sq + 8
+		for tsq < 64 {
+			WhitePassedMask[sq] |= 1 << tsq
+			tsq += 8
+		}
+
+		tsq = sq - 8
+		for tsq >= 0 {
+			BlackPassedMask[sq] |= 1 << tsq
+			tsq -= 8
+		}
+
+		if FilesBrd[SQ120[sq]] > FILE_A {
+			IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120[sq]]-1]
+
+			tsq = sq + 7
+			for tsq < 64 {
+				WhitePassedMask[sq] |= 1 << tsq
+				tsq += 8
+			}
+
+			tsq = sq - 9
+			for tsq >= 0 {
+				BlackPassedMask[sq] |= 1 << tsq
+				tsq -= 8
+			}
+		}
+
+		if FilesBrd[SQ120[sq]] < FILE_H {
+			IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120[sq]]+1]
+
+			tsq = sq + 9
+			for tsq < 64 {
+				WhitePassedMask[sq] |= 1 << tsq
+				tsq += 8
+			}
+
+			tsq = sq - 7
+			for tsq >= 0 {
+				BlackPassedMask[sq] |= 1 << tsq
+				tsq -= 8
+			}
+		}
+	}
 }

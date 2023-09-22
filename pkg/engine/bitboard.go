@@ -43,6 +43,56 @@ func PrintBitboard(out io.Writer, bitboard uint64) {
 	fmt.Fprintf(out, "\n\n")
 }
 
+func (b *Board) MirrorBoard() {
+	tempPieces := [64]int{}
+	tempSide := b.Side ^ 1
+	tempCastlePerm := 0
+	tempEnPassant := NO_SQ
+
+	swapPiece := [13]int{EMPTY, BP, BN, BB, BR, BQ, BK, WP, WN, WB, WR, WQ, WK}
+
+	if b.CastlePerm&WKCA != 0 {
+		tempCastlePerm |= BKCA
+	}
+
+	if b.CastlePerm&WQCA != 0 {
+		tempCastlePerm |= BQCA
+	}
+
+	if b.CastlePerm&BKCA != 0 {
+		tempCastlePerm |= WKCA
+	}
+
+	if b.CastlePerm&BQCA != 0 {
+		tempCastlePerm |= WQCA
+	}
+
+	if b.EnPassant != NO_SQ {
+		tempEnPassant = SQ120[Mirror64[SQ64[b.EnPassant]]]
+	}
+
+	for sq := 0; sq < 64; sq++ {
+		tempPieces[sq] = b.Pieces[SQ120[Mirror64[sq]]]
+	}
+
+	b.ResetBoard()
+
+	for sq := 0; sq < 64; sq++ {
+		tp := swapPiece[tempPieces[sq]]
+		b.Pieces[SQ120[sq]] = tp
+	}
+
+	b.Side = tempSide
+	b.CastlePerm = tempCastlePerm
+	b.EnPassant = tempEnPassant
+
+	b.PosKey = GeneratePosKey(b)
+
+	UpdateListsMaterial(b)
+
+	b.CheckBoard()
+}
+
 // PopBit finds and clears the least significant set bit (LS1B) in a uint64 bitboard.
 // It returns the index (0-63) of the LS1B that was cleared.
 // This function is used for efficiently finding and removing individual set bits from a bitboard.

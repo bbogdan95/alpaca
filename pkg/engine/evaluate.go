@@ -1,5 +1,12 @@
 package engine
 
+var PawnIsolated = -10
+var PawnPassed = [8]int{0, 5, 10, 20, 35, 60, 100, 200}
+var RookOpenFile = 10
+var RookSemiOpenFile = 5
+var QueenOpenFile = 5
+var QueenSemiOpenFile = 3
+
 var PawnTable = [64]int{
 	0, 0, 0, 0, 0, 0, 0, 0,
 	10, 10, 0, -10, -10, 0, 10, 10,
@@ -84,12 +91,28 @@ func EvalPosition(b *Board) int {
 	for i := 0; i < b.PCENum[piece]; i++ {
 		sq := b.PList[piece][i]
 		score += PawnTable[SQ64[sq]]
+
+		if IsolatedMask[SQ64[sq]]&b.Pawns[WHITE] == 0 {
+			score += PawnIsolated
+		}
+
+		if WhitePassedMask[SQ64[sq]]&b.Pawns[BLACK] == 0 {
+			score += PawnPassed[RanksBrd[sq]]
+		}
 	}
 
 	piece = BP
 	for i := 0; i < b.PCENum[piece]; i++ {
 		sq := b.PList[piece][i]
 		score -= PawnTable[Mirror64[SQ64[sq]]]
+
+		if IsolatedMask[SQ64[sq]]&b.Pawns[BLACK] == 0 {
+			score -= PawnIsolated
+		}
+
+		if BlackPassedMask[SQ64[sq]]&b.Pawns[WHITE] == 0 {
+			score -= PawnPassed[7-RanksBrd[sq]]
+		}
 	}
 
 	piece = WN
@@ -120,12 +143,44 @@ func EvalPosition(b *Board) int {
 	for i := 0; i < b.PCENum[piece]; i++ {
 		sq := b.PList[piece][i]
 		score += RookTable[SQ64[sq]]
+
+		if b.Pawns[BOTH]&FileBBMask[FilesBrd[sq]] == 0 {
+			score += RookOpenFile
+		} else if b.Pawns[WHITE]&FileBBMask[FilesBrd[sq]] == 0 {
+			score += RookSemiOpenFile
+		}
 	}
 
 	piece = BR
 	for i := 0; i < b.PCENum[piece]; i++ {
 		sq := b.PList[piece][i]
 		score -= RookTable[Mirror64[SQ64[sq]]]
+
+		if b.Pawns[BOTH]&FileBBMask[FilesBrd[sq]] == 0 {
+			score -= RookOpenFile
+		} else if b.Pawns[BLACK]&FileBBMask[FilesBrd[sq]] == 0 {
+			score -= RookSemiOpenFile
+		}
+	}
+
+	piece = WQ
+	for i := 0; i < b.PCENum[piece]; i++ {
+		sq := b.PList[piece][i]
+		if b.Pawns[BOTH]&FileBBMask[FilesBrd[sq]] == 0 {
+			score += QueenOpenFile
+		} else if b.Pawns[WHITE]&FileBBMask[FilesBrd[sq]] == 0 {
+			score += QueenSemiOpenFile
+		}
+	}
+
+	piece = BQ
+	for i := 0; i < b.PCENum[piece]; i++ {
+		sq := b.PList[piece][i]
+		if b.Pawns[BOTH]&FileBBMask[FilesBrd[sq]] == 0 {
+			score -= QueenOpenFile
+		} else if b.Pawns[BLACK]&FileBBMask[FilesBrd[sq]] == 0 {
+			score -= QueenSemiOpenFile
+		}
 	}
 
 	if b.Side == WHITE {

@@ -99,20 +99,28 @@ func (b *Board) ParsePosition(line string) {
 	b.PrintBoard(os.Stdout)
 }
 
-func UCILoop() error {
+func UCILoop(board *Board, s *SearchInfo) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Printf("id name %s\n", NAME)
 	fmt.Printf("id author Mid\n")
 	fmt.Printf("uciok\n")
 
-	board := &Board{}
-	s := &SearchInfo{}
-
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			return err
+		}
+
+		// not part of uci -- remove
+		if line == "mirror\r\n" {
+			board.PrintBoard(os.Stdout)
+			fmt.Printf("Eval:%d\n", EvalPosition(board))
+			board.MirrorBoard()
+			board.PrintBoard(os.Stdout)
+			fmt.Printf("Eval:%d\n", EvalPosition(board))
+			board.MirrorBoard()
+			continue
 		}
 
 		if len(line) >= 7 && line[:7] == "isready" {
