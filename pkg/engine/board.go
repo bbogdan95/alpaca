@@ -480,6 +480,29 @@ func (b *Board) MakeMove(move int) (int, error) {
 	return TRUE, nil
 }
 
+func (b *Board) MakeNullMove() {
+	b.CheckBoard()
+
+	b.Ply++
+	b.History[b.HisPly].PosKey = b.PosKey
+
+	if b.EnPassant != NO_SQ {
+		b.HashEP()
+	}
+
+	b.History[b.HisPly].Move = NOMOVE
+	b.History[b.HisPly].FiftyMove = b.FiftyMove
+	b.History[b.HisPly].EnPassant = b.EnPassant
+	b.History[b.HisPly].CastlePerm = b.CastlePerm
+	b.EnPassant = NO_SQ
+
+	b.Side ^= 1
+	b.HisPly++
+	b.HashSide()
+
+	b.CheckBoard()
+}
+
 func (b *Board) TakeMove() {
 
 	b.CheckBoard()
@@ -561,6 +584,30 @@ func (b *Board) TakeMove() {
 		}
 		b.AddPiece(from, piece)
 	}
+
+	b.CheckBoard()
+}
+
+func (b *Board) TakeNullMove() {
+	b.CheckBoard()
+
+	b.HisPly--
+	b.Ply--
+
+	if b.EnPassant != NO_SQ {
+		b.HashEP()
+	}
+
+	b.CastlePerm = b.History[b.HisPly].CastlePerm
+	b.FiftyMove = b.History[b.HisPly].FiftyMove
+	b.EnPassant = b.History[b.HisPly].EnPassant
+
+	if b.EnPassant != NO_SQ {
+		b.HashEP()
+	}
+
+	b.Side ^= 1
+	b.HashSide()
 
 	b.CheckBoard()
 }
