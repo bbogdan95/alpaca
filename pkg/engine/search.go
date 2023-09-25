@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -20,6 +21,9 @@ type SearchInfo struct {
 
 	FailHigh      float64
 	FailHighFirst float64
+
+	GameMode     int
+	PostThinking int
 }
 
 // Iterative deepening
@@ -41,17 +45,35 @@ func SearchPosition(b *Board, s *SearchInfo) {
 		bestMove = b.PvArray[0]
 
 		elapsed := time.Since(s.StartTime).Milliseconds()
-		fmt.Printf("info score cp %d depth %d nodes %1d time %d ", bestScore, currentDepth, s.Nodes, elapsed)
 
-		fmt.Printf("pv")
-		for i := 0; i < pvMoves; i++ {
-			fmt.Printf(" %s", PrintMove(b.PvArray[i]))
+		if s.GameMode == UCIMODE {
+			fmt.Printf("info score cp %d depth %d nodes %1d time %d ", bestScore, currentDepth, s.Nodes, elapsed)
+		} else if s.GameMode == XBOARDMODE && s.PostThinking == TRUE {
+			fmt.Printf("%d %d %d %1d ", currentDepth, bestScore, elapsed, s.Nodes)
+		} else if s.PostThinking == TRUE {
+			fmt.Printf("score:%d depth:%d nodes:%1d time:%d(ms) ", bestScore, currentDepth, s.Nodes, elapsed)
 		}
-		fmt.Printf("\n")
-		//fmt.Printf("Ordering: %.2f\n", (s.FailHighFirst / s.FailHigh))
+
+		if s.GameMode == UCIMODE || s.PostThinking == TRUE {
+			fmt.Printf("pv")
+			for i := 0; i < pvMoves; i++ {
+				fmt.Printf(" %s", PrintMove(b.PvArray[i]))
+			}
+			fmt.Printf("\n")
+		}
 	}
 
-	fmt.Printf("bestmove %s\n", PrintMove(bestMove))
+	if s.GameMode == UCIMODE {
+		fmt.Printf("bestmove %s\n", PrintMove(bestMove))
+	} else if s.GameMode == XBOARDMODE {
+		fmt.Printf("move %s\n", PrintMove(bestMove))
+		b.MakeMove(bestMove)
+	} else {
+		fmt.Printf("\n\n***Alpaca makes move %s***\n\n", PrintMove(bestMove))
+		b.MakeMove(bestMove)
+		b.PrintBoard(os.Stdout)
+	}
+
 }
 
 func ClearForSearch(b *Board, s *SearchInfo) {

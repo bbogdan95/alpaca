@@ -112,17 +112,6 @@ func UCILoop(board *Board, s *SearchInfo) error {
 			return err
 		}
 
-		// not part of uci -- remove
-		if line == "mirror\r\n" {
-			board.PrintBoard(os.Stdout)
-			fmt.Printf("Eval:%d\n", EvalPosition(board))
-			board.MirrorBoard()
-			board.PrintBoard(os.Stdout)
-			fmt.Printf("Eval:%d\n", EvalPosition(board))
-			board.MirrorBoard()
-			continue
-		}
-
 		if len(line) >= 7 && line[:7] == "isready" {
 			fmt.Printf("readyok\n")
 		} else if len(line) >= 8 && line[:8] == "position" {

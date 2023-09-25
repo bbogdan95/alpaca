@@ -199,9 +199,6 @@ func PieceValid(piece int) bool {
 }
 
 func InputWaiting() bool {
-	// stat, _ := os.Stdin.Stat()
-	// return (stat.Mode() & os.ModeCharDevice) != 0
-
 	file := os.Stdin
 	fi, err := file.Stat()
 	if err != nil {

@@ -1,11 +1,16 @@
 package engine
 
+import "math"
+
 var PawnIsolated = -10
 var PawnPassed = [8]int{0, 5, 10, 20, 35, 60, 100, 200}
 var RookOpenFile = 10
 var RookSemiOpenFile = 5
 var QueenOpenFile = 5
 var QueenSemiOpenFile = 3
+
+// used to switch between KingO for openings and KingE for endgames
+var EndGameMaterial = 2*PieceVal[WR] + 4*PieceVal[WN] + 8*PieceVal[WP]
 
 var PawnTable = [64]int{
 	0, 0, 0, 0, 0, 0, 0, 0,
@@ -51,6 +56,8 @@ var RookTable = [64]int{
 	0, 0, 5, 10, 10, 5, 0, 0,
 }
 
+// in the end game, the king is encouraged to move to the
+// center of the board, and is penalised from moving to the corners or the sides
 var KingE = [64]int{
 	-50, -10, 0, 0, 0, 0, -10, -50,
 	-10, 0, 10, 10, 10, 10, 0, -10,
@@ -62,6 +69,8 @@ var KingE = [64]int{
 	-50, -10, 0, 0, 0, 0, -10, -50,
 }
 
+// in the opening the king is encouraged to castle
+// and is heavely penalised to advanced forward
 var KingO = [64]int{
 	0, 5, 5, -10, -10, 0, 10, 5,
 	-30, -30, -30, -30, -30, -30, -30, -30,
@@ -86,6 +95,10 @@ var Mirror64 = [64]int{
 
 func EvalPosition(b *Board) int {
 	score := b.Material[WHITE] - b.Material[BLACK]
+
+	if MaterialDraw(b) == TRUE {
+		return 0
+	}
 
 	piece := WP
 	for i := 0; i < b.PCENum[piece]; i++ {
@@ -183,9 +196,60 @@ func EvalPosition(b *Board) int {
 		}
 	}
 
+	piece = WK
+	sq := b.PList[piece][0]
+	if b.PCENum[BQ] == 0 || (b.Material[BLACK] <= EndGameMaterial) {
+		score += KingE[SQ64[sq]]
+	} else {
+		score += KingO[SQ64[sq]]
+	}
+
+	piece = BK
+	sq = b.PList[piece][0]
+	if b.PCENum[WQ] == 0 || (b.Material[WHITE] <= EndGameMaterial) {
+		score -= KingE[Mirror64[SQ64[sq]]]
+	} else {
+		score -= KingO[Mirror64[SQ64[sq]]]
+	}
+
 	if b.Side == WHITE {
 		return score
 	} else {
 		return -score
 	}
+}
+
+// sjeng 11.2
+func MaterialDraw(b *Board) int {
+	if b.PCENum[WR] == 0 && b.PCENum[BR] == 0 && b.PCENum[WQ] == 0 && b.PCENum[BQ] == 0 {
+		if b.PCENum[BB] == 0 && b.PCENum[WB] == 0 {
+			if b.PCENum[WN] < 3 && b.PCENum[BN] < 3 {
+				return 1
+			}
+		} else if b.PCENum[WN] == 0 && b.PCENum[BN] == 0 {
+			if math.Abs(float64(b.PCENum[WB]-b.PCENum[BB])) < 2 {
+				return 1
+			}
+		} else if (b.PCENum[WN] < 3 && b.PCENum[WB] == 0) || (b.PCENum[WB] == 1 && b.PCENum[WN] == 0) {
+			if (b.PCENum[BN] < 3 && b.PCENum[BB] == 0) || (b.PCENum[BB] == 1 && b.PCENum[BN] == 0) {
+				return 1
+			}
+		}
+	} else if b.PCENum[WQ] == 0 && b.PCENum[BQ] == 0 {
+		if b.PCENum[WR] == 1 && b.PCENum[BR] == 1 {
+			if (b.PCENum[WN]+b.PCENum[WB]) < 2 && (b.PCENum[BN]+b.PCENum[BB]) < 2 {
+				return 1
+			}
+		} else if b.PCENum[WR] == 1 && b.PCENum[BR] == 0 {
+			if (b.PCENum[WN]+b.PCENum[WB] == 0) && (((b.PCENum[BN] + b.PCENum[BB]) == 1) || ((b.PCENum[BN] + b.PCENum[BB]) == 2)) {
+				return TRUE
+			}
+		} else if b.PCENum[BR] == 1 && b.PCENum[WR] == 0 {
+			if (b.PCENum[BN]+b.PCENum[BB] == 0) && (((b.PCENum[WN] + b.PCENum[WB]) == 1) || ((b.PCENum[WN] + b.PCENum[WB]) == 2)) {
+				return TRUE
+			}
+		}
+	}
+
+	return 0
 }

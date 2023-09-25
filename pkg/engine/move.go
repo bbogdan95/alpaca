@@ -98,6 +98,9 @@ func PrintMove(move int) string {
 }
 
 func ParseMove(move string, b *Board) (int, error) {
+	if len(move) < 4 {
+		return NOMOVE, nil
+	}
 	if move[1] > '8' || move[1] < '1' {
 		return NOMOVE, nil
 	}

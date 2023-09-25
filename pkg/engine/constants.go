@@ -153,5 +153,11 @@ const (
 	TRUE
 )
 
+const (
+	UCIMODE = iota
+	XBOARDMODE
+	CONSOLEMODE
+)
+
 const INFINITE = 30000
 const MATE = 29000
