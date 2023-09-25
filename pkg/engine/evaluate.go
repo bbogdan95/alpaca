@@ -8,9 +8,10 @@ var RookOpenFile = 10
 var RookSemiOpenFile = 5
 var QueenOpenFile = 5
 var QueenSemiOpenFile = 3
+var BishopPair = 30
 
 // used to switch between KingO for openings and KingE for endgames
-var EndGameMaterial = 2*PieceVal[WR] + 4*PieceVal[WN] + 8*PieceVal[WP]
+var EndGameMaterial = 1*PieceVal[WR] + 2*PieceVal[WN] + 2*PieceVal[WP]
 
 var PawnTable = [64]int{
 	0, 0, 0, 0, 0, 0, 0, 0,
@@ -96,7 +97,7 @@ var Mirror64 = [64]int{
 func EvalPosition(b *Board) int {
 	score := b.Material[WHITE] - b.Material[BLACK]
 
-	if MaterialDraw(b) == TRUE {
+	if b.PCENum[WP] == 0 && b.PCENum[BP] == 0 && MaterialDraw(b) == TRUE {
 		return 0
 	}
 
@@ -198,7 +199,7 @@ func EvalPosition(b *Board) int {
 
 	piece = WK
 	sq := b.PList[piece][0]
-	if b.PCENum[BQ] == 0 || (b.Material[BLACK] <= EndGameMaterial) {
+	if b.Material[BLACK] <= EndGameMaterial {
 		score += KingE[SQ64[sq]]
 	} else {
 		score += KingO[SQ64[sq]]
@@ -206,10 +207,17 @@ func EvalPosition(b *Board) int {
 
 	piece = BK
 	sq = b.PList[piece][0]
-	if b.PCENum[WQ] == 0 || (b.Material[WHITE] <= EndGameMaterial) {
+	if b.Material[WHITE] <= EndGameMaterial {
 		score -= KingE[Mirror64[SQ64[sq]]]
 	} else {
 		score -= KingO[Mirror64[SQ64[sq]]]
+	}
+
+	if b.PCENum[WB] >= 2 {
+		score += BishopPair
+	}
+	if b.PCENum[BB] >= 2 {
+		score -= BishopPair
 	}
 
 	if b.Side == WHITE {
