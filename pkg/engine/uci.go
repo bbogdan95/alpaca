@@ -104,7 +104,10 @@ func UCILoop(board *Board, s *SearchInfo) error {
 
 	fmt.Printf("id name %s\n", NAME)
 	fmt.Printf("id author Mid\n")
+	fmt.Printf("option name Hash type spin default 64 min 4 max 2048\n")
 	fmt.Printf("uciok\n")
+
+	MB := 64
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -126,6 +129,17 @@ func UCILoop(board *Board, s *SearchInfo) error {
 			fmt.Printf("id name %s\n", NAME)
 			fmt.Printf("id author Mid\n")
 			fmt.Printf("uciok\n")
+		} else if len(line) >= 26 && line[:26] == "setoption name Hash value " {
+			fmt.Sscanf(line, "%*s %*s %*s %d", &MB)
+			if MB < 4 {
+				MB = 4
+			}
+			if MB > 2048 {
+				MB = 2048
+			}
+
+			fmt.Printf("Set Hash to %d MB\n", MB)
+			board.HashTable.ClearHashTable()
 		}
 
 		if s.Quit == TRUE {

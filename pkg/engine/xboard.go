@@ -22,6 +22,7 @@ func XBoardLoop(b *Board, s *SearchInfo) error {
 	mps := 0
 	inBuf := ""
 	command := ""
+	MB := 64
 	timeLeft := 0
 
 	for {
@@ -84,6 +85,17 @@ func XBoardLoop(b *Board, s *SearchInfo) error {
 				t *= 10
 				fmt.Printf("DEBUG time:%d\n", t)
 			}
+		case "memory":
+			fmt.Sscanf(inBuf, "memory %d", &MB)
+			if MB < 4 {
+				MB = 4
+			}
+			if MB > 2048 {
+				MB = 2048
+			}
+
+			fmt.Printf("Set Hash to %d MB\n", MB)
+			b.HashTable.ClearHashTable()
 		case "level":
 			movetime = -1
 			sec := 0
