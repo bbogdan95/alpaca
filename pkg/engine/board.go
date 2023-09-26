@@ -36,8 +36,8 @@ type Board struct {
 	History    [MAXGAMESMOVES]Undo
 	PList      [13][10]int
 
-	PvTable PvTable
-	PvArray [MAXDEPTH]int
+	HashTable HashTable
+	PvArray   [MAXDEPTH]int
 
 	SearchHistory [13][BRD_SQ_NUM]int
 	SearchKillers [2][MAXDEPTH]int

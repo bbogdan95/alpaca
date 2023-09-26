@@ -161,3 +161,4 @@ const (
 
 const INFINITE = 30000
 const MATE = 29000
+const ISMATE = INFINITE - MAXDEPTH

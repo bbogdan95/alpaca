@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"time"
 )
@@ -89,7 +90,10 @@ func ClearForSearch(b *Board, s *SearchInfo) {
 		}
 	}
 
-	b.PvTable.ClearPvTable()
+	b.HashTable.OverWrite = 0
+	b.HashTable.Hit = 0
+	b.HashTable.Cut = 0
+
 	b.Ply = 0
 
 	s.Stopped = 0
@@ -132,8 +136,6 @@ func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 	GenerateAllCaptures(b, &ml)
 
 	legal := 0
-	oldAlpha := alpha
-	bestMove := NOMOVE
 	score = -INFINITE
 
 	for i := 0; i < ml.Count; i++ {
@@ -167,12 +169,7 @@ func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 			}
 
 			alpha = score
-			bestMove = ml.Moves[i].Move
 		}
-	}
-
-	if alpha != oldAlpha {
-		b.PvTable.StorePvMove(b, bestMove)
 	}
 
 	return alpha
@@ -205,6 +202,13 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	}
 
 	score := -INFINITE
+	pvMove := NOMOVE
+
+	if b.HashTable.ProbeHashEntry(b, &pvMove, &score, alpha, beta, depth) == TRUE {
+		b.HashTable.Cut++
+		return score
+	}
+
 	if doNull == 1 && inCheck == 0 && b.Ply > 0 && b.BigPCE[b.Side] > 0 && depth >= 4 {
 		b.MakeNullMove()
 		score = -AlphaBeta(-beta, -beta+1, depth-4, FALSE, b, s)
@@ -213,7 +217,7 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 			return 0
 		}
 
-		if score >= beta {
+		if score >= beta && math.Abs(float64(score)) < ISMATE {
 			return beta
 		}
 	}
@@ -224,12 +228,12 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	legal := 0
 	oldAlpha := alpha
 	bestMove := NOMOVE
+	bestScore := -INFINITE
 	score = -INFINITE
-	PvMove := b.PvTable.ProbePvTable(b)
 
-	if PvMove != NOMOVE {
+	if pvMove != NOMOVE {
 		for i := 0; i < ml.Count; i++ {
-			if ml.Moves[i].Move == PvMove {
+			if ml.Moves[i].Move == pvMove {
 				ml.Moves[i].Score = 2000000
 				break
 			}
@@ -257,28 +261,36 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 			return 0
 		}
 
-		if score > alpha {
-			if score >= beta {
-				if legal == 1 {
-					s.FailHighFirst++
-				}
-				s.FailHigh++
-
-				if ml.Moves[i].Move&MoveFlagCapture == 0 {
-					b.SearchKillers[1][b.Ply] = b.SearchKillers[0][b.Ply]
-					b.SearchKillers[0][b.Ply] = ml.Moves[i].Move
-				}
-
-				return beta
-			}
-
-			alpha = score
+		if score > bestScore {
+			bestScore = score
 			bestMove = ml.Moves[i].Move
 
-			if ml.Moves[i].Move&MoveFlagCapture == 0 {
-				b.SearchHistory[b.Pieces[GetFrom(bestMove)]][GetToSq(bestMove)] += depth
+			if score > alpha {
+				if score >= beta {
+					if legal == 1 {
+						s.FailHighFirst++
+					}
+					s.FailHigh++
+
+					if ml.Moves[i].Move&MoveFlagCapture == 0 {
+						b.SearchKillers[1][b.Ply] = b.SearchKillers[0][b.Ply]
+						b.SearchKillers[0][b.Ply] = ml.Moves[i].Move
+					}
+
+					b.HashTable.StoreHashEntry(b, bestMove, beta, HFBETA, depth)
+
+					return beta
+				}
+
+				alpha = score
+				bestMove = ml.Moves[i].Move
+
+				if ml.Moves[i].Move&MoveFlagCapture == 0 {
+					b.SearchHistory[b.Pieces[GetFrom(bestMove)]][GetToSq(bestMove)] += depth
+				}
 			}
 		}
+
 	}
 
 	if legal == 0 {
@@ -290,7 +302,9 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	}
 
 	if alpha != oldAlpha {
-		b.PvTable.StorePvMove(b, bestMove)
+		b.HashTable.StoreHashEntry(b, bestMove, bestScore, HFEXACT, depth)
+	} else {
+		b.HashTable.StoreHashEntry(b, bestMove, alpha, HFALPHA, depth)
 	}
 
 	return alpha
