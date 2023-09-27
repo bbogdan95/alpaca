@@ -1,6 +1,8 @@
 package engine
 
-import "fmt"
+import (
+	"unsafe"
+)
 
 const (
 	HFNONE = iota
@@ -18,7 +20,7 @@ type HashEntry struct {
 }
 
 type HashTable struct {
-	Table      map[string]HashEntry
+	Table      []HashEntry
 	NumEntries int
 	NewWrite   int
 	OverWrite  int
@@ -26,15 +28,31 @@ type HashTable struct {
 	Cut        int
 }
 
-func (ht *HashTable) ClearHashTable() {
-	ht.Table = map[string]HashEntry{}
-	ht.NewWrite = 0
+// HashEntry has a size of 40 bytes on x64 systems.
+// In order to set a limit to our HashTable in terms of MB, the internal representation of the HashTable
+// is a []HashEntry with a preallocated capacity of 1024 * 1024 * MB (size in bytes). We calculate the maximum number of entries
+// in our HashTable by taking the desired size in bytes (1024 * 1024 * MB) and dividing it by the size of one HashEntry (40 bytes)
+// Our HashTable will never grow beyound the predefined limit (in terms of MB but) - but it will also never grow beyond b.HashTable.NumEntries
+// because when we store something into it, we use the zobrist key (uint64) % number of elements - the result of this operation is always
+// a number between 0 and b.HashTable.NumEntries.
+func InitHashTable(b *Board, MB int) {
+	entrySize := unsafe.Sizeof(HashEntry{}) // 40 bytes
+
+	HashSize := 1024 * 1024 * MB
+	b.HashTable.NumEntries = HashSize / int(entrySize)
+
+	b.HashTable.Table = make([]HashEntry, b.HashTable.NumEntries)
 }
 
-func (ht *HashTable) StoreHashEntry(b *Board, move int, score int, flags int, depth int) {
-	indexStr := fmt.Sprintf("%d", b.PosKey)
+func ClearHashTable(b *Board) {
+	b.HashTable.Table = make([]HashEntry, b.HashTable.NumEntries)
+	b.HashTable.NewWrite = 0
+}
 
-	if b.HashTable.Table[indexStr].PosKey == 0 {
+func StoreHashEntry(b *Board, move int, score int, flags int, depth int) {
+	// by doing this, we limit the number of entries to our defined size in MB
+	index := b.PosKey % uint64(b.HashTable.NumEntries)
+	if b.HashTable.Table[index].PosKey == 0 {
 		b.HashTable.NewWrite++
 	} else {
 		b.HashTable.OverWrite++
@@ -46,7 +64,7 @@ func (ht *HashTable) StoreHashEntry(b *Board, move int, score int, flags int, de
 		score -= b.Ply
 	}
 
-	ht.Table[indexStr] = HashEntry{
+	b.HashTable.Table[index] = HashEntry{
 		Move:   move,
 		PosKey: b.PosKey,
 		Flags:  flags,
@@ -55,15 +73,14 @@ func (ht *HashTable) StoreHashEntry(b *Board, move int, score int, flags int, de
 	}
 }
 
-func (ht *HashTable) ProbeHashEntry(b *Board, move *int, score *int, alpha int, beta int, depth int) int {
-	indexStr := fmt.Sprintf("%d", b.PosKey)
+func ProbeHashEntry(b *Board, move *int, score *int, alpha int, beta int, depth int) int {
+	index := b.PosKey % uint64(b.HashTable.NumEntries)
+	if b.HashTable.Table[index].PosKey == b.PosKey {
+		*move = b.HashTable.Table[index].Move
+		if b.HashTable.Table[index].Depth >= depth {
+			b.HashTable.Hit++
 
-	if ht.Table[indexStr].PosKey == b.PosKey {
-		*move = ht.Table[indexStr].Move
-		if ht.Table[indexStr].Depth >= depth {
-			ht.Hit++
-
-			*score = ht.Table[indexStr].Score
+			*score = b.HashTable.Table[index].Score
 			if *score > ISMATE {
 				*score -= b.Ply
 			} else {
@@ -72,7 +89,7 @@ func (ht *HashTable) ProbeHashEntry(b *Board, move *int, score *int, alpha int, 
 				}
 			}
 
-			switch ht.Table[indexStr].Flags {
+			switch b.HashTable.Table[index].Flags {
 			case HFALPHA:
 				if *score <= alpha {
 					*score = alpha
@@ -95,7 +112,7 @@ func (ht *HashTable) ProbeHashEntry(b *Board, move *int, score *int, alpha int, 
 }
 
 func GetPvLine(depth int, b *Board) int {
-	move := b.HashTable.ProbePvMove(b)
+	move := ProbePvMove(b)
 	count := 0
 
 	for move != NOMOVE && count < depth {
@@ -116,7 +133,7 @@ func GetPvLine(depth int, b *Board) int {
 			break
 		}
 
-		move = b.HashTable.ProbePvMove(b)
+		move = ProbePvMove(b)
 	}
 
 	for b.Ply > 0 {
@@ -126,11 +143,10 @@ func GetPvLine(depth int, b *Board) int {
 	return count
 }
 
-func (ht *HashTable) ProbePvMove(b *Board) int {
-	indexStr := fmt.Sprintf("%d", b.PosKey)
-
-	if ht.Table[indexStr].PosKey == b.PosKey {
-		return ht.Table[indexStr].Move
+func ProbePvMove(b *Board) int {
+	index := b.PosKey % uint64(b.HashTable.NumEntries)
+	if b.HashTable.Table[index].PosKey == b.PosKey {
+		return b.HashTable.Table[index].Move
 	}
 
 	return NOMOVE

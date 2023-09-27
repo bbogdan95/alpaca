@@ -178,7 +178,7 @@ func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	b.CheckBoard()
 
-	if depth == 0 {
+	if depth <= 0 {
 		return Quiescence(alpha, beta, b, s)
 	}
 
@@ -204,7 +204,7 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 	score := -INFINITE
 	pvMove := NOMOVE
 
-	if b.HashTable.ProbeHashEntry(b, &pvMove, &score, alpha, beta, depth) == TRUE {
+	if ProbeHashEntry(b, &pvMove, &score, alpha, beta, depth) == TRUE {
 		b.HashTable.Cut++
 		return score
 	}
@@ -277,13 +277,12 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 						b.SearchKillers[0][b.Ply] = ml.Moves[i].Move
 					}
 
-					b.HashTable.StoreHashEntry(b, bestMove, beta, HFBETA, depth)
+					StoreHashEntry(b, bestMove, beta, HFBETA, depth)
 
 					return beta
 				}
 
 				alpha = score
-				bestMove = ml.Moves[i].Move
 
 				if ml.Moves[i].Move&MoveFlagCapture == 0 {
 					b.SearchHistory[b.Pieces[GetFrom(bestMove)]][GetToSq(bestMove)] += depth
@@ -295,16 +294,16 @@ func AlphaBeta(alpha, beta, depth, doNull int, b *Board, s *SearchInfo) int {
 
 	if legal == 0 {
 		if inCheck == 1 {
-			return -MATE + b.Ply
+			return -INFINITE + b.Ply
 		} else {
 			return 0
 		}
 	}
 
 	if alpha != oldAlpha {
-		b.HashTable.StoreHashEntry(b, bestMove, bestScore, HFEXACT, depth)
+		StoreHashEntry(b, bestMove, bestScore, HFEXACT, depth)
 	} else {
-		b.HashTable.StoreHashEntry(b, bestMove, alpha, HFALPHA, depth)
+		StoreHashEntry(b, bestMove, alpha, HFALPHA, depth)
 	}
 
 	return alpha

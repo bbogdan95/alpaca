@@ -86,7 +86,13 @@ func XBoardLoop(b *Board, s *SearchInfo) error {
 				fmt.Printf("DEBUG time:%d\n", t)
 			}
 		case "memory":
-			fmt.Sscanf(inBuf, "memory %d", &MB)
+			n, err := fmt.Sscanf(inBuf, "memory %d", &MB)
+			if err != nil {
+				panic(err)
+			}
+			if n != 1 {
+				panic("error reading Hash value")
+			}
 			if MB < 4 {
 				MB = 4
 			}
@@ -95,7 +101,7 @@ func XBoardLoop(b *Board, s *SearchInfo) error {
 			}
 
 			fmt.Printf("Set Hash to %d MB\n", MB)
-			b.HashTable.ClearHashTable()
+			InitHashTable(b, MB)
 		case "level":
 			movetime = -1
 			sec := 0
@@ -121,6 +127,7 @@ func XBoardLoop(b *Board, s *SearchInfo) error {
 		case "ping":
 			fmt.Printf("pong%s\n", inBuf[4:])
 		case "new":
+			ClearHashTable(b)
 			engineSide = BLACK
 			b.ParseFen(START_FEN)
 			depth = -1
@@ -253,6 +260,7 @@ func ConsoleLoop(b *Board, s *SearchInfo) error {
 				movetime = t * 1000
 			}
 		case "new":
+			ClearHashTable(b)
 			engineSide = BLACK
 			b.ParseFen(START_FEN)
 		case "go":
