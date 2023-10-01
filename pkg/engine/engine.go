@@ -19,18 +19,16 @@ var FileChar = "abcdefgh"
 var FileBBMask [8]uint64
 var RankBBMask [8]uint64
 
-/*
-We can AND this with the white pawn mask and if the result is 0
-we know theres no obstacle if front of our pawn trying to promote
-0 0 1 1 1 1 0 0
-0 0 1 1 1 1 0 0
-0 0 1 1 1 1 0 0
-0 0 1 1 1 1 0 0
-0 0 0 x 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0
-*/
+// We can AND this with the white pawn mask and if the result is 0
+// we know there is no obstacle if front of our pawn trying to promote
+// 0 0 1 1 1 1 0 0
+// 0 0 1 1 1 1 0 0
+// 0 0 1 1 1 1 0 0
+// 0 0 1 1 1 1 0 0
+// 0 0 0 x 0 0 0 0
+// 0 0 0 0 0 0 0 0
+// 0 0 0 0 0 0 0 0
+// 0 0 0 0 0 0 0 0
 var BlackPassedMask [64]uint64
 var WhitePassedMask [64]uint64
 var IsolatedMask [64]uint64

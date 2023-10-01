@@ -16,33 +16,32 @@ type Undo struct {
 	PosKey     uint64
 }
 
+// Board represents the state of a chessboard including piece positions, game status, and move history.
 type Board struct {
-	Pieces    [BRD_SQ_NUM]int
-	Pawns     [3]uint64
-	KingSq    [2]int
-	Side      int
-	EnPassant int
-	FiftyMove int
-	Ply       int
-	HisPly    int
-	PosKey    uint64
-	PCENum    [13]int
-	BigPCE    [2]int
-	MajPCE    [2]int
-	MinPCE    [2]int
-	Material  [2]int
-
-	CastlePerm int
-	History    [MAXGAMESMOVES]Undo
-	PList      [13][10]int
-
-	HashTable HashTable
-	PvArray   [MAXDEPTH]int
-
-	SearchHistory [13][BRD_SQ_NUM]int
-	SearchKillers [2][MAXDEPTH]int
+	Pieces        [BRD_SQ_NUM]int     // Stores the pieces on the board at each square.
+	Pawns         [3]uint64           // Bitboards for pawns: white, black, and both.
+	KingSq        [2]int              // Squares of the kings for white and black.
+	Side          int                 // Current side to move: 0 for white, 1 for black.
+	EnPassant     int                 // En passant square.
+	FiftyMove     int                 // Number of half-moves since the last pawn move or capture.
+	Ply           int                 // Number of half-moves in the current search.
+	HisPly        int                 // Total number of half-moves in the history.
+	PosKey        uint64              // Unique hash key of the current position.
+	PCENum        [13]int             // Number of each piece type on the board.
+	BigPCE        [2]int              // Number of big pieces (not pawns) for each side.
+	MajPCE        [2]int              // Number of major pieces (rooks and queens) for each side.
+	MinPCE        [2]int              // Number of minor pieces (knights and bishops) for each side.
+	Material      [2]int              // Material value of the position for each side.
+	CastlePerm    int                 // Castling permissions for both sides.
+	History       [MAXGAMESMOVES]Undo // History of moves.
+	PList         [13][10]int         // Piece list for each piece type and each side.
+	HashTable     HashTable           // Hash table for storing positions in the transposition table.
+	PvArray       [MAXDEPTH]int       // Principal variation array for storing the best moves in the search.
+	SearchHistory [13][BRD_SQ_NUM]int // Search history table for move ordering heuristics.
+	SearchKillers [2][MAXDEPTH]int    // Search killer moves table for move ordering heuristics.
 }
 
+// PrintBoard prints the current state of the chessboard to the specified output writer.
 func (b *Board) PrintBoard(out io.Writer) {
 
 	fmt.Fprintln(out, "Game board: ")
@@ -480,6 +479,14 @@ func (b *Board) MakeMove(move int) (int, error) {
 	return TRUE, nil
 }
 
+// MakeNullMove makes a null move on the chessboard, updating necessary state variables.
+// A null move involves changing the side to move, updating the position key, and storing
+// relevant information in the history table.
+// Making a null move in chess programming, often referred to as a "null move pruning" or
+// simply "null move," is a strategic move used in the context of alpha-beta pruning and
+// minimax search algorithms. It involves allowing the opponent to move twice in a row,
+// simulating the effect of passing the turn without making any move. This technique can
+// significantly improve the efficiency of the search algorithm.
 func (b *Board) MakeNullMove() {
 	b.CheckBoard()
 
@@ -615,7 +622,6 @@ func (b *Board) TakeNullMove() {
 // from the last time the FiftyMove was set to zero, loop over and check for repetition
 func (b *Board) IsRepetition() bool {
 	for i := b.HisPly - b.FiftyMove; i < b.HisPly-1; i++ {
-		// will we ever go over MAXGAMEMOVES ?
 		if b.PosKey == b.History[i].PosKey {
 			return true
 		}

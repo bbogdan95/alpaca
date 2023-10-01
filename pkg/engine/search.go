@@ -27,11 +27,11 @@ type SearchInfo struct {
 	PostThinking int
 }
 
-// Iterative deepening
-// for depth = 1 to maxdepth, search with aplha-beta
-// if we have enough time, search for depth = 2, and so on
+// SearchPosition initiates the chess engine's search from the current position on the given board.
+// It uses the specified SearchInfo struct to guide the search parameters and store search-related information.
+// The function performs an iterative deepening search, updating the principal variation and best move found
+// during the search process.
 func SearchPosition(b *Board, s *SearchInfo) {
-
 	bestMove := NOMOVE
 	ClearForSearch(b, s)
 
@@ -74,7 +74,6 @@ func SearchPosition(b *Board, s *SearchInfo) {
 		b.MakeMove(bestMove)
 		b.PrintBoard(os.Stdout)
 	}
-
 }
 
 func ClearForSearch(b *Board, s *SearchInfo) {
@@ -102,6 +101,15 @@ func ClearForSearch(b *Board, s *SearchInfo) {
 	s.FailHigh = 0
 }
 
+// Performs a quiescence search on the given chess position, evaluating
+// capturing moves and other forcing moves to handle tactical threats. It recursively explores
+// these moves to a limited depth to accurately evaluate positions where the material balance
+// is unstable due to tactical complications.
+//
+// This function helps avoid the horizon effect, where the engine might miss tactical threats
+// just beyond the search horizon, by focusing on capturing and forcing moves that can significantly
+// impact the position's evaluation. It uses a limited-depth recursive approach to assess the
+// stability of the position and the consequences of potential captures and checks.
 func Quiescence(alpha, beta int, b *Board, s *SearchInfo) int {
 	b.CheckBoard()
 	if beta <= alpha {

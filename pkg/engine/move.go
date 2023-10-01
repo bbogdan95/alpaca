@@ -97,6 +97,7 @@ func PrintMove(move int) string {
 	}
 }
 
+// ParseMove parses a chess move from the given algebraic notation string
 func ParseMove(move string, b *Board) (int, error) {
 	if len(move) < 4 {
 		return NOMOVE, nil

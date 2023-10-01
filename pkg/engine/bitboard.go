@@ -43,6 +43,9 @@ func PrintBitboard(out io.Writer, bitboard uint64) {
 	fmt.Fprintf(out, "\n\n")
 }
 
+// MirrorBoard mirrors the current chessboard, swapping positions of pieces, castling rights,
+// en passant square, and side to move. This function effectively flips the board along the vertical axis.
+// It recalculates the position key and updates internal data structures accordingly.
 func (b *Board) MirrorBoard() {
 	tempPieces := [64]int{}
 	tempSide := b.Side ^ 1

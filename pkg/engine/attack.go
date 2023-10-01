@@ -4,11 +4,42 @@ import (
 	"fmt"
 )
 
+// KnightDir represents the possible move directions for a knight on the chessboard.
+// The knight can move in an L-shape: two squares in one direction and one square perpendicular to that direction.
+// The array contains relative square indices representing these knight move directions.
 var KnightDir = [8]int{-8, -19, -21, -12, 8, 19, 21, 12}
+
+// RookDir represents the possible move directions for a rook on the chessboard.
+// Rooks can move vertically (along files) or horizontally (along ranks).
+// The array contains relative square indices representing these rook move directions.
 var RookDir = [4]int{-1, -10, 1, 10}
+
+// BishopDir represents the possible move directions for a bishop on the chessboard.
+// Bishops can move diagonally.
+// The array contains relative square indices representing these bishop move directions.
 var BishopDir = [4]int{-9, -11, 11, 9}
+
+// KingDir represents the possible move directions for a king on the chessboard.
+// Kings can move one square in any direction: horizontally, vertically, or diagonally.
+// The array contains relative square indices representing these king move directions.
 var KingDir = [8]int{-1, -10, 1, 10, -9, -11, 11, 9}
 
+// SqAttacked determines if a specific square on the chessboard is attacked by a given side.
+//
+// Parameters:
+//
+//	sq: The square index to check for an attack.
+//	side: The side for which the attack is being checked. Use constants WHITE or BLACK.
+//	b: A pointer to the chessboard struct representing the current board state.
+//
+// Returns:
+//
+//	TRUE if the square is attacked by the specified side, FALSE otherwise.
+//
+// Note:
+//
+//	The function handles pawns, knights, rooks, bishops, queens, and kings to determine attacks.
+//	It performs boundary checks and ensures the square and side are valid before processing.
 func SqAttacked(sq int, side int, b *Board) int {
 
 	if !SqOnBoard(sq) || !SideValid(side) {
@@ -83,6 +114,12 @@ func SqAttacked(sq int, side int, b *Board) int {
 	return FALSE
 }
 
+// ShowSqAttackedBySide prints the squares attacked by the specified side on the given chessboard.
+//
+// Parameters:
+//
+//	side: The side for which the attacked squares are to be displayed. Use constants WHITE or BLACK.
+//	b: A pointer to the chessboard for which the attacked squares are to be calculated.
 func ShowSqAttackedBySide(side int, b *Board) {
 	fmt.Printf("\n\nSquares attacked by: %c\n", SideChar[side])
 

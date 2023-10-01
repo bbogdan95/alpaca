@@ -9,10 +9,15 @@ type Move struct {
 	Score int
 }
 
-// most valuable victim - least valuable attacker
+// most valuable victim - least valuable attacker scores
 var VictimScore = [13]int{0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}
+
+// MvvLvaScores stores the MvvLva (Most Valuable Victim - Least Valuable Attacker) scores for each combination of attacker and victim pieces.
+// These scores are used to prioritize capturing moves during move ordering in the search algorithm.
 var MvvLvaScores = [13][13]int{}
 
+// InitMvvLva initializes the MvvLva scores based on the VictimScore array.
+// The MvvLva scores represent the priority of capturing moves, with higher scores indicating more valuable captures.
 func InitMvvLva() {
 	for attacker := WP; attacker <= BK; attacker++ {
 		for victim := WP; victim <= BK; victim++ {
@@ -78,7 +83,7 @@ func (ml *MoveList) PrintMoveList() {
 		fmt.Printf("Move: %d > %s (score: %d)\n", i+1, PrintMove(ml.Moves[i].Move), ml.Moves[i].Score)
 	}
 
-	fmt.Printf("End movelist ----\n\n")
+	fmt.Printf("\n\n")
 }
 
 // AddQuietMove adds a quiet (non-capturing) chess move to the MoveList.

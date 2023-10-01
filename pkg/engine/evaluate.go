@@ -227,7 +227,11 @@ func EvalPosition(b *Board) int {
 	}
 }
 
-// sjeng 11.2
+// Taken from Sjeng 11.2
+// MaterialDraw evaluates if the current position is a draw based on material count.
+// It returns 1 if the position is a draw and 0 otherwise.
+// This function checks for specific material imbalances that typically lead to draws.
+// It is used in endgame evaluation to identify drawn positions.
 func MaterialDraw(b *Board) int {
 	if b.PCENum[WR] == 0 && b.PCENum[BR] == 0 && b.PCENum[WQ] == 0 && b.PCENum[BQ] == 0 {
 		if b.PCENum[BB] == 0 && b.PCENum[WB] == 0 {
